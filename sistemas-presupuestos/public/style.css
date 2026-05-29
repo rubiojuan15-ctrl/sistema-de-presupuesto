@@ -4,10 +4,9 @@ body {
 
     padding: 40px;
 
-    background:#ececec;
+    background: #f2f2f2;
 
     padding-bottom: 120px;
-    color: white;
 }
 
 input,
@@ -565,12 +564,4 @@ body {
 
     -webkit-tap-highlight-color:
         transparent;
-}
-.contenedor {
-  max-width: 1100px;
-  margin: 40px auto;
-  background: #1e293b;
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.3);
 }
