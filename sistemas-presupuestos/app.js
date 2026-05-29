@@ -578,6 +578,16 @@ app.get("/exportar-excel", async (req, res) => {
 
 
 //no borrar porque es el código que ejecuta al servidor 
-app.listen(3000, () => {
-    console.log("Servidor funcionando");
-});
+const PORT =
+    process.env.PORT || 3000;
+
+app.listen(
+    PORT,
+    () => {
+
+        console.log(
+            "Servidor funcionando"
+        );
+
+    }
+);
