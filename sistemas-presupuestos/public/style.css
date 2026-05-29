@@ -8,8 +8,6 @@ body {
 
     padding-bottom: 120px;
     color: white;
-    font-family: Inter, sans-serif;
-
 }
 
 input,
@@ -575,26 +573,4 @@ body {
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,.3);
-}
-h1 {
-  font-size: 42px;
-  font-weight: 700;
-  margin-bottom: 30px;
-}
-input,
-textarea,
-select {
-  background: #334155;
-  border: 1px solid #475569;
-  color: white;
-  border-radius: 12px;
-  padding: 14px;
-}
-button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 14px 24px;
-  font-weight: bold;
 }
