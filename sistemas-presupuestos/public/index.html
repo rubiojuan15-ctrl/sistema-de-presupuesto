@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Sistema de presupuestos</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link
+        rel="manifest"
+        href="manifest.json"
+    >
+    <meta
+    name="theme-color"
+    content="#000000"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        href="icono.png"
+    >
+</head>
+
+<body>
+<div class="container">
+    <div id="login">  
+        <input
+            type="text"
+            id="usuario"
+            placeholder="Usuario"
+        >      
+        <input
+            type="password"
+            id="password"
+            placeholder="Contraseña"
+        >
+        <button onclick="login()">
+            Entrar
+        </button>
+        <button onclick="registrarse()">
+            Registrarse
+        </button>
+    </div>
+    <div id="mobileBar">
+
+        <button onclick="window.scrollTo(0,0)">
+            Inicio
+        </button>
+
+        <button onclick="cargarPresupuestos()">
+            Actualizar
+        </button>
+
+        <button onclick="exportarExcel()">
+            Excel
+        </button>
+
+    </div>
+    <div id="sistema">
+         <button onclick="logout()">
+            Cerrar sesión
+        </button>
+
+                <h1>Sistema de presupuestos</h1>
+                <div id="dashboard">
+
+                    <div class="card-dashboard">
+                        <h3 id="totalPresupuestos">0</h3>
+                        <p>Presupuestos</p>
+                    </div>
+
+                    <div class="card-dashboard">
+                        <h3 id="totalPendientes">0</h3>
+                        <p>Pendientes</p>
+                    </div>
+
+                    <div class="card-dashboard">
+                        <h3 id="totalProceso">0</h3>
+                        <p>En proceso</p>
+                    </div>
+
+                    <div class="card-dashboard">
+                        <h3 id="totalFacturado">$0</h3>
+                        <p>Facturación</p>
+                    </div>
+
+                </div>
+                <input
+                type="text"
+                id="busqueda"
+                placeholder="Buscar presupuesto..."
+                >
+                <div class="topbar">
+
+                    <div>
+
+                        <h1>🪵 Sistema de Presupuestos</h1>
+
+                        <p>
+                            Carpintería, restauración, enmarcados
+                        </p>
+
+                    </div>
+
+                    <div>
+
+                        <button onclick="logout()">
+                            🚪 Salir
+                        </button>
+
+                    </div>
+
+                </div>
+                <div class="formulario">
+                    <input type="text" id="cliente" placeholder="Cliente">
+
+                    <input type="tel" id="telefono" placeholder="Telefono con codigo de pais">
+
+                    <input type="text" id="direccion" placeholder="Direccion">
+
+                    <input type="text" id="trabajo" placeholder="Trabajo">
+
+                    <textarea id="observaciones" placeholder="Observaciones de trabajo. Ej: Reparar pata trasera; Mantener color original; Tapizado a cargo del cliente"></textarea>
+
+                    <label for="fechaVencimiento">Vencimiento</label>
+                    <input type="date" id="fechaVencimiento">
+
+                    <input type="number" id="materiales" placeholder="Costo de materiales">
+
+                    <input type="number" id="manoDeObra" placeholder="Precio mano de obra">
+                </div>
+                <select id="estado">
+                    <option>Pendiente</option>
+                    <option>En proceso</option>
+                    <option>Entregado</option>
+                    <option>Seña</option>
+                    <option>Saldo pendiente</option>
+                    <option>Cobrado total</option>
+                </select>
+
+                <input
+                    type="file"
+                    id="imagen"
+                    accept="image/*"
+                    capture="environment"
+                    multiple
+                >
+
+                <h2 id="total">Total: $0</h2>
+
+                <button onclick="guardarPresupuesto()">
+                    Guardar presupuesto
+                </button>
+
+                <button onclick="cargarPresupuestos()">
+                    Ver presupuestos
+                </button>
+                <button onclick="exportarExcel()">
+                    Excel
+                </button>
+                <div id="dashboard">
+                    <div id="dashboard">
+
+                    <canvas id="grafico"></canvas>
+                    <canvas id="graficoMensual"></canvas>
+                    <div class="card">
+                        <h3>💰 Total facturado</h3>
+                        <p id="totalFacturado">$0</p>
+                    </div>
+                    <div class="card">
+                        <h3>📋 Presupuestos</h3>
+                        <p id="cantidadPresupuestos">0</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>📈 Promedio</h3>
+                        <p id="promedio">$0</p>
+                    </div>
+                     <div class="card">
+                        <h3>🛠 Pendientes</h3>
+                        <p id="cantidadPendientes">0</p>
+                    </div>
+            </div>
+            <select id="filtroEstado">
+
+                <option value="">Todos</option>
+
+                <option value="Pendiente">
+                    Pendientes
+                </option>
+
+                <option value="En proceso">
+                    En proceso
+                </option>
+
+                <option value="Entregado">
+                    Entregados
+                </option>
+
+                <option value="Seña">
+                    Seña
+                </option>
+
+                <option value="Saldo pendiente">
+                    Saldo pendiente
+                </option>
+
+                <option value="Cobrado total">
+                    Cobrado total
+                </option>
+
+            </select>
+
+            <select id="filtroVencimiento">
+
+                <option value="">Todos los vencimientos</option>
+
+                <option value="hoy">
+                    Vence hoy
+                </option>
+
+                <option value="semana">
+                    Esta semana
+                </option>
+
+                <option value="atrasados">
+                    Atrasados
+                </option>
+
+            </select>
+            <div id="alertas"></div>
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Cliente</th>
+
+                        <th>Telefono</th>
+
+                        <th>Direccion</th>
+
+                        <th>Trabajo</th>
+
+                        <th>Observaciones de trabajo</th>
+
+                        <th>Total</th>
+                        
+                        <th>Fecha</th>
+
+                        <th>Vencimiento</th>
+
+                        <th>Imagen</th>
+
+                        <th>Estado</th>
+                        
+                        <th>Acciones</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="lista"></tbody>
+
+            </table>
+  
+   
+                
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <div id="modalImagen">
+                    <img id="imagenGrande">
+                </div>
+                <div id="comparador">
+
+        <div class="comparador-content">
+
+                <img id="antes">
+
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="50"
+                    id="sliderComparador"
+                >
+
+                <img id="despues">
+
+            </div>
+
+        </div>
+        <div id="notificacion"></div>
+                <script src="app.js"></script>
+    
+    
+</div>    
+</body>
+
+</html>
