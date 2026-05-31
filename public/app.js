@@ -14,6 +14,10 @@ const manoDeObra = document.getElementById("manoDeObra");
 
 const total = document.getElementById("total");
 
+const sena = document.getElementById("sena");
+
+const saldo = document.getElementById("saldo");
+
 const lista = document.getElementById("lista");
 
 const estado = document.getElementById("estado");
@@ -47,16 +51,23 @@ function token() {
     return localStorage.getItem("token") || "";
 
 }
-
-
-
 function calcularTotal() {
 
     let resultado =
         Number(materiales.value) +
         Number(manoDeObra.value);
 
-    total.innerText = "Total: $" + resultado;
+    let valorSena =
+        Number(sena.value) || 0;
+
+    let saldoPendiente =
+        resultado - valorSena;
+
+    total.innerText =
+        "Total: $" + resultado;
+
+    saldo.innerText =
+        "Saldo: $" + saldoPendiente;
 
     return resultado;
 }
@@ -64,6 +75,8 @@ function calcularTotal() {
 materiales.addEventListener("input", calcularTotal);
 
 manoDeObra.addEventListener("input", calcularTotal);
+
+sena.addEventListener("input", calcularTotal);
 
 busqueda.addEventListener(
     "input",
@@ -154,6 +167,17 @@ async function guardarPresupuesto() {
             "estado",
             estado.value
         );
+        formData.append(
+            "sena",
+            sena.value || 0
+        );
+
+        formData.append(
+            "saldo",
+            calcularTotal() -
+            (Number(sena.value) || 0)
+        );
+        
         
         console.log(imagen.files);
        for (let file of imagen.files) {        
@@ -411,6 +435,13 @@ presupuestos.forEach(p => {
             <td data-label="Observaciones de trabajo">${p.observaciones || "-"}</td>
 
             <td data-label="Total">$${p.total}</td>
+            <td data-label="Seña">
+                $${p.sena || 0}
+            </td>
+
+            <td data-label="Saldo">
+                $${p.saldo || p.total}
+            </td>
             
             <td data-label="Fecha">${p.fecha}</td>
             <td data-label="Vencimiento">${p.fechaVencimiento || "-"}</td>

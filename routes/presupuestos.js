@@ -133,8 +133,11 @@ router.post(
         const materiales =
             Number(req.body.materiales);
 
-        const manoDeObra =
-            Number(req.body.manoDeObra);
+        const manoDeObra = Number(req.body.manoDeObra);
+
+        const sena = Number(req.body.sena || 0);
+
+        const saldo = Number(req.body.saldo || 0);
 
         const total =
             materiales + manoDeObra;
@@ -182,7 +185,15 @@ router.post(
                     .send("Usuario no autorizado");
 
             }
+            console.log(
+                "SEÑA:",
+                req.body.sena
+            );
 
+            console.log(
+                "SALDO:",
+                req.body.saldo
+            );
         db.run(
             `
             INSERT INTO presupuestos
@@ -195,15 +206,17 @@ router.post(
                 materiales,
                 manoDeObra,
                 total,
+                sena,
+                saldo,
                 fecha,
                 fechaVencimiento,
                 estado,
                 imagenes,
                 usuarioId
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
-            [
+            [   //array
                 cliente,
                 telefono,
                 direccion,
@@ -212,6 +225,8 @@ router.post(
                 materiales,
                 manoDeObra,
                 total,
+                sena,
+                saldo,
                 fecha,
                 fechaVencimiento,
                 estado,

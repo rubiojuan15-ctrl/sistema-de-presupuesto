@@ -1,0 +1,6 @@
+-- SQLite
+ALTER TABLE presupuestos
+ADD COLUMN sena INTEGER DEFAULT 0;
+
+ALTER TABLE presupuestos
+ADD COLUMN saldo INTEGER DEFAULT 0;
