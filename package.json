@@ -13,6 +13,6 @@
   "jsonwebtoken": "latest",
   "multer": "latest",
   "pdfkit": "latest",
-  "sqlite3": "latest"
+  "sqlite3": "^5.1.7"
 }
 }
