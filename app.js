@@ -1,5 +1,5 @@
 //imports
-//const ExcelJS = require("exceljs");
+const ExcelJS = require("exceljs");
 
 const express = require("express");
 
@@ -53,6 +53,12 @@ fs.copyFileSync(
 console.log("Backup creado");
 
 //SQLLITE
+const path = require("path");
+
+console.log(
+    "BASE:",
+    path.resolve("presupuestos.db")
+);
 db.run(`
     CREATE TABLE IF NOT EXISTS presupuestos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

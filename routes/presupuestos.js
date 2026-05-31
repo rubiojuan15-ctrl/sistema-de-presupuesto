@@ -194,6 +194,7 @@ router.post(
                 "SALDO:",
                 req.body.saldo
             );
+            console.log("INSERT NUEVO CON SENA");
         db.run(
             `
             INSERT INTO presupuestos
