@@ -255,5 +255,313 @@ router.post(
     }
 
 );
+router.put(
+    "/editar-presupuesto/:id",
+    auth,
+    (req, res) => {
 
+        const id = req.params.id;
+
+        const {
+            cliente,
+            telefono,
+            direccion,
+            trabajo,
+            observaciones,
+            materiales,
+            manoDeObra,
+            total,
+            sena,
+            saldo,
+            fechaVencimiento,
+            estado
+        } = req.body;
+
+        db.run(
+            `
+            UPDATE presupuestos
+            SET
+                cliente = ?,
+                telefono = ?,
+                direccion = ?,
+                trabajo = ?,
+                observaciones = ?,
+                materiales = ?,
+                manoDeObra = ?,
+                total = ?,
+                sena = ?,
+                saldo = ?,
+                fechaVencimiento = ?,
+                estado = ?
+            WHERE id = ?
+            `,
+            [
+                cliente,
+                telefono,
+                direccion,
+                trabajo,
+                observaciones,
+                materiales,
+                manoDeObra,
+                total,
+                sena,
+                saldo,
+                fechaVencimiento,
+                estado,
+                id
+            ],
+            function(err) {
+
+                if (err) {
+
+                    console.log(err);
+
+                    return res
+                        .status(500)
+                        .send("Error al editar");
+
+                }
+
+                res.send("Presupuesto actualizado");
+
+            }
+
+        );
+
+    }
+);
+router.put("/cobrar/:id",
+    auth,
+    (req, res) => {
+
+        const id = req.params.id;
+
+        const monto =
+            Number(req.body.monto);
+
+        db.get(
+
+            `
+            SELECT
+                total,
+                sena
+            FROM presupuestos
+            WHERE id = ?
+            `,
+
+            [id],
+
+            (err, presupuesto) => {
+
+                if (err) {
+
+                    console.log(err);
+
+                    return res
+                        .status(500)
+                        .send("Error");
+
+                }
+
+                if (!presupuesto) {
+
+                    return res
+                        .status(404)
+                        .send("No encontrado");
+
+                }
+                const total =
+                    Number(presupuesto.total);
+
+                let nuevaSena =
+                    Number(
+                        presupuesto.sena || 0
+                    ) + monto;
+
+                if (nuevaSena > total) {
+
+                    nuevaSena = total;
+
+                }
+                if (monto <= 0) {
+
+                        return res
+                            .status(400)
+                            .send("Monto inválido");
+
+                    }
+
+                const nuevoSaldo =
+                    total - nuevaSena;
+                
+
+                const nuevoEstado =
+
+                    nuevoSaldo <= 0
+                    ? "Cobrado total"
+                    : "Saldo pendiente";
+
+                db.run(
+
+                    `
+                    INSERT INTO pagos
+                    (
+                        presupuestoId,
+                        fecha,
+                        monto
+                    )
+                    VALUES
+                    (
+                        ?, ?, ?
+                    )
+                    `,
+
+                    [
+                        id,
+                        new Date()
+                            .toISOString()
+                            .split("T")[0],
+                        monto
+                    ],
+
+                    (err2) => {
+
+                        if (err2) {
+
+                            console.log(err2);
+
+                            return res
+                                .status(500)
+                                .send("Error");
+
+                        }
+
+                        res.send(
+                            "Pago registrado"
+                        );
+
+                    }
+
+                );
+
+            }
+
+        );
+
+    }
+);
+router.get(
+    "/resumen",
+    auth,
+    (req, res) => {
+
+        db.get(
+            `
+            SELECT
+
+                SUM(total) AS totalPresupuestado,
+
+                SUM(sena) AS totalCobrado,
+
+                SUM(saldo) AS saldoPendiente
+
+            FROM presupuestos
+            `,
+            [],
+            (err, resumen) => {
+
+                if (err) {
+
+                    console.log(err);
+
+                    return res
+                        .status(500)
+                        .send("Error");
+
+                }
+
+                db.get(
+                    `
+                    SELECT
+                        COUNT(*) AS vencidos
+                    FROM presupuestos
+                    WHERE
+                        fechaVencimiento < date('now')
+                        AND estado != 'Cobrado total'
+                    `,
+                    [],
+                    (err2, vencidos) => {
+
+                        if (err2) {
+
+                            console.log(err2);
+
+                            return res
+                                .status(500)
+                                .send("Error");
+
+                        }
+
+                        res.json({
+
+                            totalPresupuestado:
+                                resumen.totalPresupuestado || 0,
+
+                            totalCobrado:
+                                resumen.totalCobrado || 0,
+
+                            saldoPendiente:
+                                resumen.saldoPendiente || 0,
+
+                            vencidos:
+                                vencidos.vencidos || 0
+
+                        });
+
+                    }
+                );
+
+            }
+        );
+
+    }
+);
+router.get(
+    "/pagos/:id",
+    auth,
+    (req, res) => {
+
+        const id = req.params.id;
+
+        db.all(
+
+            `
+            SELECT *
+            FROM pagos
+            WHERE presupuestoId = ?
+            ORDER BY id DESC
+            `,
+
+            [id],
+
+            (err, rows) => {
+
+                if (err) {
+
+                    console.log(err);
+
+                    return res
+                        .status(500)
+                        .send("Error");
+
+                }
+
+                res.json(rows);
+
+            }
+
+        );
+
+    }
+);
 module.exports = router;

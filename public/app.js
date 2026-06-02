@@ -197,7 +197,7 @@ if (idEditando) {
             "Content-Type": "application/json",
             authorization: token()
         },
-
+            //PUT
         body: JSON.stringify({
 
             cliente: cliente.value,
@@ -215,6 +215,10 @@ if (idEditando) {
             manoDeObra: manoDeObra.value,
 
             total: calcularTotal(),
+
+            sena: sena.value || 0,
+
+            saldo: calcularTotal() - (Number(sena.value) || 0),
 
             fecha: new Date().toLocaleDateString(),
 
@@ -293,21 +297,60 @@ async function cargarPresupuestos() {
 
     }
 
-    const presupuestos =
-        await respuesta.json();
-        const hoy =
-    new Date()
+    const presupuestos = await respuesta.json();
+    
+    const resumenRespuesta = await fetch("/presupuestos/resumen",
+        {
+            headers: {
+                authorization: token()
+            }
+        }
+    );
+
+const resumen = await resumenRespuesta.json();
+
+console.log(resumen);
+
+        document.getElementById(
+            "dashPresupuestado"
+        ).textContent =
+            "$" +
+            Number(
+                resumen.totalPresupuestado
+            ).toLocaleString("es-AR");
+
+        document.getElementById(
+            "dashCobrado"
+        ).textContent =
+            "$" +
+            Number(
+                resumen.totalCobrado
+            ).toLocaleString("es-AR");
+
+        document.getElementById(
+            "dashPendiente"
+        ).textContent =
+            "$" +
+            Number(
+                resumen.saldoPendiente
+            ).toLocaleString("es-AR");
+
+        document.getElementById(
+            "dashVencidos"
+        ).textContent =
+            resumen.vencidos;
+    const hoy = new Date()
         .toISOString()
         .split("T")[0];
 
-const alertas =
+    const alertas =
     document.getElementById(
         "alertas"
     );
 
-alertas.innerHTML = "";
+    alertas.innerHTML = "";
 
-presupuestos.forEach(p => {
+    presupuestos.forEach(p => {
 
     if (!p.fechaVencimiento) {
 
@@ -421,49 +464,30 @@ presupuestos.forEach(p => {
     presupuestos.forEach(p => {
 
     lista.innerHTML += `
-
+        
         <tr>
+            <td data-label="Cliente">
+                ${p.cliente}
+            </td>
 
-            <td data-label="Cliente">${p.cliente}</td>
+            <td data-label="Trabajo">
+                ${p.trabajo}
+            </td>
 
-            <td data-label="Telefono">${p.telefono || "-"}</td>
+            <td data-label="Total">
+                $${Number(p.total).toLocaleString("es-AR")}
+            </td>
 
-            <td data-label="Direccion">${p.direccion || ""}</td>
-
-            <td data-label="Trabajo">${p.trabajo}</td>
-
-            <td data-label="Observaciones de trabajo">${p.observaciones || "-"}</td>
-
-            <td data-label="Total">$${p.total}</td>
             <td data-label="Seña">
-                $${p.sena || 0}
+                $${Number(p.sena || 0).toLocaleString("es-AR")}
             </td>
 
             <td data-label="Saldo">
-                $${p.saldo || p.total}
+                $${Number(p.saldo || p.total).toLocaleString("es-AR")}
             </td>
-            
-            <td data-label="Fecha">${p.fecha}</td>
-            <td data-label="Vencimiento">${p.fechaVencimiento || "-"}</td>
-            <td data-label="Imagen">
-                 <div class="galeria">
-                    ${p.imagenes
-                        ? p.imagenes
-                            .split(",")
-                            .map(img => `
 
-                                <img
-                                    src="${img}"
-                                    class="preview"
-                                    onclick="abrirImagen('${img}')"
-                                >
-
-                            `)
-                            .join("")
-                        : ""
-                    }
-
-                </div>
+            <td data-label="Vencimiento">
+                ${p.fechaVencimiento || "-"}
             </td>
             <td data-label="Estado">
 
@@ -536,25 +560,22 @@ presupuestos.forEach(p => {
 
             <td data-label="Acciones">
 
+                <button onclick="verDetalle(${p.id})">
+                    👁
+                </button>
+
                 <button onclick="editarPresupuesto(${p.id})">
-                    Editar
+                    ✏️
                 </button>
 
-                <button onclick="eliminarPresupuesto(${p.id})">
-                    Eliminar
-                </button>
-
-                <button onclick="descargarPDF(${p.id})">
-                    PDF
-                </button>
-                <button onclick="enviarWhatsApp(${p.id})">
-                    WhatsApp
+                <button onclick="masAcciones(${p.id})">
+                    ⚙️
                 </button>
 
             </td>
 
         </tr>
-
+                          
     `;
 
 });
@@ -610,11 +631,79 @@ async function editarPresupuesto(id) {
 
     estado.value = presupuesto.estado;
 
+    sena.value = presupuesto.sena || 0;
+    saldo.value = presupuesto.saldo || presupuesto.total;
+
     calcularTotal();
 
     idEditando = id;
+        window.scrollTo({
+
+        top: 0,
+
+        behavior: "smooth"
+
+    });
+    cliente.focus();
 
 }
+async function registrarPago(id) {
+
+      const monto = Number(
+        prompt("Ingrese monto cobrado:")
+    );
+
+    if (isNaN(monto) || monto <= 0) {
+
+        alert("Monto inválido");
+
+        return;
+
+    }
+
+    const respuesta = await fetch(
+
+        "/presupuestos/cobrar/" + id,
+
+        {
+
+            method: "PUT",
+
+            headers: {
+
+                "Content-Type":
+                    "application/json",
+
+                authorization:
+                    token()
+
+            },
+
+            body: JSON.stringify({
+
+                monto: Number(monto)
+
+            })
+
+        }
+
+    );
+
+    if (!respuesta.ok) {
+
+        alert("Error al registrar pago");
+
+        return;
+
+    }
+    
+
+    alert("Pago registrado");
+
+    cargarPresupuestos();
+
+}
+
 async function eliminarPresupuesto(id) {
     if (!confirm("Eliminar presupuesto?")) {
         return;
@@ -1165,5 +1254,146 @@ function mostrarNotificacion(texto) {
         n.style.display = "none";
 
     }, 4000);
+
+}
+async function verHistorial(id) {
+
+    const respuesta = await fetch(
+
+        "/presupuestos/pagos/" + id,
+
+        {
+
+            headers: {
+
+                authorization:
+                    token()
+
+            }
+
+        }
+
+    );
+
+    const pagos =
+        await respuesta.json();
+
+    if (!pagos.length) {
+
+        alert(
+            "No hay pagos registrados"
+        );
+
+        return;
+
+    }
+
+    let texto = "";
+
+    pagos.forEach((p) => {
+
+        texto +=
+
+            p.fecha +
+
+            "  +$" +
+
+            Number(
+                p.monto
+            ).toLocaleString("es-AR")
+
+            +
+
+            "\n";
+
+    });
+
+    alert(texto);
+
+}
+async function verDetalle(id) {
+
+    const respuesta = await fetch(
+        "/presupuestos/obtener-presupuestos?usuarioId=" +
+        localStorage.getItem("usuarioId"),
+        {
+            headers: {
+                authorization: token()
+            }
+        }
+    );
+
+    const presupuestos =
+        await respuesta.json();
+
+    const p =
+        presupuestos.find(
+            x => x.id == id
+        );
+
+    if (!p) return;
+
+    alert(
+
+`Cliente: ${p.cliente}
+
+Telefono: ${p.telefono || "-"}
+
+Direccion: ${p.direccion || "-"}
+
+Observaciones:
+${p.observaciones || "-"}
+
+Fecha:
+${p.fecha || "-"}`
+
+    );
+
+}   
+function masAcciones(id) {
+
+    const opcion = prompt(
+
+`1 = Cobrar
+
+2 = Historial
+
+3 = PDF
+
+4 = WhatsApp
+
+5 = Eliminar`
+
+    );
+
+    if (opcion === "1") {
+
+        registrarPago(id);
+
+    }
+
+    else if (opcion === "2") {
+
+        verHistorial(id);
+
+    }
+
+    else if (opcion === "3") {
+
+        descargarPDF(id);
+
+    }
+
+    else if (opcion === "4") {
+
+        enviarWhatsApp(id);
+
+    }
+
+    else if (opcion === "5") {
+
+        eliminarPresupuesto(id);
+
+    }
 
 }

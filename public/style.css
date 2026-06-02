@@ -115,14 +115,14 @@ th {
 
     color: white;
 
-    padding: 15px;
+    padding: auto;
 
     text-align: left;
 }
 
 td {
 
-    padding: 15px;
+    padding: 8px;
 
     border-bottom: 1px solid #ddd;
 }
@@ -252,9 +252,7 @@ table {
 
     width: 100%;
 
-    overflow-x: auto;
-
-    display: block;
+    border-collapse: collapse;
 
 }
 
@@ -795,5 +793,86 @@ td img {
 
     margin-top:8px;
     color:#666;
+
+}
+.dashboard {
+
+    display: flex;
+
+    gap: 15px;
+
+    margin: 20px 0;
+
+    flex-wrap: wrap;
+
+}
+
+.card-dashboard {
+
+    background: white;
+
+    padding: 20px;
+
+    border-radius: 10px;
+
+    min-width: 200px;
+
+    box-shadow: 0 2px 10px rgba(0,0,0,.1);
+
+}
+
+.card-dashboard h3 {
+
+    margin-top: 10px;
+
+    font-size: 24px;
+
+}
+.acciones button {
+
+    padding: 6px 10px;
+
+    font-size: 13px;
+
+    margin: 2px;
+
+}
+td[data-label="Trabajo"],
+td[data-label="Observaciones de trabajo"] {
+
+    max-width: 180px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+th,
+td {
+
+    white-space: nowrap;
+
+    font-size: 14px;
+
+}
+
+table {
+
+    table-layout: auto;
+
+}
+.acciones {
+
+    min-width: 120px;
+
+}
+
+.acciones button {
+
+    display: block;
+
+    width: 100%;
+
+    margin-bottom: 4px;
 
 }
