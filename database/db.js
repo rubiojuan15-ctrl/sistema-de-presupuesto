@@ -28,3 +28,18 @@ CREATE TABLE IF NOT EXISTS pagos (
 
 )
 `);
+db.run(`
+CREATE TABLE IF NOT EXISTS gastos (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    fecha TEXT,
+
+    concepto TEXT,
+
+    monto REAL,
+
+    usuarioId INTEGER
+
+)
+`);

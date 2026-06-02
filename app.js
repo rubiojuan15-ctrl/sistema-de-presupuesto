@@ -9,6 +9,8 @@ const authRoutes = require("./routes/auth");
 
 const presupuestosRoutes = require("./routes/presupuestos");
 
+const gastosRoutes = require("./routes/gastos");
+
 app.use(express.json());
 
 app.use(express.static("public"));
@@ -21,6 +23,8 @@ app.use(
 app.use(authRoutes);
 
 app.use("/presupuestos", presupuestosRoutes);
+
+app.use("/gastos", gastosRoutes);
 
 const db = require("./database/db");
 

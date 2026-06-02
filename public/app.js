@@ -983,10 +983,23 @@ if (
 
     cargarPresupuestos();
 
+} else {
+
+    document
+        .getElementById("login")
+        .style.display = "block";
+
+    document
+        .getElementById("sistema")
+        .style.display = "none";
+
 }
 function logout() {
+
+    alert("LOGOUT EJECUTADO");
+
     localStorage.removeItem("logueado");
-    
+
     localStorage.removeItem("token");
 
     localStorage.removeItem("usuarioId");

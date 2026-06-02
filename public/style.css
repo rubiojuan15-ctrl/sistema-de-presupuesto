@@ -876,3 +876,6 @@ table {
     margin-bottom: 4px;
 
 }
+#sistema {
+    display: none;
+}
