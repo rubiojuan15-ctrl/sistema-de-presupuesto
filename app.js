@@ -1,9 +1,12 @@
 //imports
+const fs = require("fs");
+const path = require("path");
 const ExcelJS = require("exceljs");
-
 const express = require("express");
-
 const app = express();
+
+// Permite iniciar el servidor desde cualquier carpeta.
+process.chdir(__dirname);
 
 const authRoutes = require("./routes/auth");
 
@@ -13,11 +16,11 @@ const gastosRoutes = require("./routes/gastos");
 
 app.use(express.json());
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.use(
     "/uploads",
-    express.static("uploads")
+    express.static(path.join(__dirname, "uploads"))
 );
 
 app.use(authRoutes);
@@ -30,14 +33,12 @@ const db = require("./database/db");
 
 const PDFDocument = require("pdfkit");
 
-const fs = require("fs");
-
 const auth = require("./middlewares/auth");
-if (!fs.existsSync("backups")) {
+const backupsDir = path.join(__dirname, "backups");
+const databaseFile = path.join(__dirname, "presupuestos.db");
 
-    fs.mkdirSync("backups");
+fs.mkdirSync(backupsDir, { recursive: true });
 
-}
 const fechaBackup =
 
     new Date()
@@ -46,22 +47,35 @@ const fechaBackup =
 
     .replace(/:/g, "-");
 
-fs.copyFileSync(
+try {
+    fs.copyFileSync(
+        databaseFile,
+        path.join(backupsDir, `backup-${fechaBackup}.db`)
+    );
 
-    "presupuestos.db",
+    console.log("Backup creado");
+} catch (err) {
+    console.error("No se pudo crear el backup:", err.message);
+}
 
-    `backups/backup-${fechaBackup}.db`
+app.get("/backup", (req, res, next) => {
+    res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="presupuestos-backup.db"'
+    );
 
-);
+    res.sendFile(databaseFile, { dotfiles: "allow" }, (err) => {
+        if (err) {
+            next(err);
+        }
+    });
 
-console.log("Backup creado");
-
+});
 //SQLLITE
-const path = require("path");
 
 console.log(
     "BASE:",
-    path.resolve("presupuestos.db")
+    databaseFile
 );
 db.run(`
     CREATE TABLE IF NOT EXISTS presupuestos (
@@ -126,7 +140,6 @@ db.run(
     "UPDATE presupuestos SET estado = ? WHERE estado = ?",
     ["Cobrado total", "Cobrado"]
 );
-
 app.put("/presupuestos/editar-presupuesto/:id", auth, (req, res) => {
 
     const id = req.params.id;
@@ -529,6 +542,12 @@ app.get("/exportar-excel", async (req, res) => {
         "SELECT * FROM presupuestos",
         [],
         async (err, rows) => {
+            if (err) {
+                console.error(err);
+                return res
+                    .status(500)
+                    .send("Error al exportar presupuestos");
+            }
 
             rows.forEach((p) => {
 
@@ -575,19 +594,23 @@ app.get("/exportar-excel", async (req, res) => {
                 "attachment; filename=presupuestos.xlsx"
             );
 
-            await workbook.xlsx.write(res);
+            try {
+                await workbook.xlsx.write(res);
+                res.end();
+            } catch (writeErr) {
+                console.error(writeErr);
 
-            res.end();
+                if (!res.headersSent) {
+                    res.status(500).send("Error al generar el archivo Excel");
+                }
+            }
 
         }
     );
 
 });
 
-
-
-
 //no borrar porque es el código que ejecuta al servidor 
 app.listen(3000, () => {
-    console.log("Servidor funcionando");
+    console.log("Servidor funcionando en http://localhost:3000");
 });

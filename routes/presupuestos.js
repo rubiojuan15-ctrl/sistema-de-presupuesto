@@ -564,4 +564,77 @@ router.get(
 
     }
 );
+router.get("/resumen-mensual", (req, res) => {
+
+    db.all(
+        `
+        SELECT total, fecha
+        FROM presupuestos
+        WHERE estado = 'Cobrado total'
+        `,
+        [],
+        (err, rows) => {
+
+            if (err) {
+                return res.status(500).json(err);
+            }
+
+            const ahora = new Date();
+
+            const mesActual = ahora.getMonth() + 1;
+            const anioActual = ahora.getFullYear();
+
+            let totalCobradoMes = 0;
+
+            rows.forEach(p => {
+
+                const partes = p.fecha.split("/");
+
+                const mes = Number(partes[1]);
+                const anio = Number(partes[2]);
+
+                if (
+                    mes === mesActual &&
+                    anio === anioActual
+                ) {
+                    totalCobradoMes += Number(p.total);
+                }
+
+            });
+
+            res.json({
+                totalCobradoMes
+            });
+
+        }
+    );
+
+});
+router.get("/debug-cobrados", (req, res) => {
+
+    db.all(
+        `
+        SELECT
+            id,
+            fecha,
+            estado,
+            total,
+            sena,
+            saldo
+        FROM presupuestos
+        WHERE estado = 'Cobrado total'
+        `,
+        [],
+        (err, rows) => {
+
+            if (err) {
+                return res.status(500).json(err);
+            }
+
+            res.json(rows);
+
+        }
+    );
+
+});
 module.exports = router;

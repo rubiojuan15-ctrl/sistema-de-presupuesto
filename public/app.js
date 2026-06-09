@@ -256,6 +256,9 @@ else {
     }
 
     cargarPresupuestos();
+    cargarResumenGastos();
+    cargarGastos();
+    cargarResumenMensual();
 }
 
 //cargar presupuestos
@@ -307,9 +310,9 @@ async function cargarPresupuestos() {
         }
     );
 
-const resumen = await resumenRespuesta.json();
+        const resumen = await resumenRespuesta.json();
 
-console.log(resumen);
+        console.log(resumen);
 
         document.getElementById(
             "dashPresupuestado"
@@ -339,6 +342,22 @@ console.log(resumen);
             "dashVencidos"
         ).textContent =
             resumen.vencidos;
+        const gastosRespuesta =
+            await fetch("/gastos/resumen");
+
+        const gastosDatos =
+            await gastosRespuesta.json();
+
+        const ganancia =
+            Number(resumen.totalCobrado || 0)
+            -
+            Number(gastosDatos.totalGastos || 0);
+
+        document.getElementById(
+            "gananciaReal"
+        ).textContent =
+            "$" +
+            ganancia.toLocaleString("es-AR");   
     const hoy = new Date()
         .toISOString()
         .split("T")[0];
@@ -390,7 +409,7 @@ console.log(resumen);
 
     }
 
-});
+    });
 
     lista.innerHTML = "";
     const pendientesCantidad =
@@ -579,6 +598,7 @@ console.log(resumen);
     `;
 
 });
+
 crearGrafico(presupuestos);
 
 crearGraficoMensual(
@@ -699,8 +719,10 @@ async function registrarPago(id) {
     
 
     alert("Pago registrado");
-
+    cargarResumenGastos();
     cargarPresupuestos();
+    cargarGastos();
+    cargarResumenMensual();
 
 }
 
@@ -926,7 +948,10 @@ async function login() {
         alert("Usuario incorrecto");
 
     }
-
+    cargarPresupuestos();
+    cargarResumenGastos();
+    cargarGastos();
+    cargarResumenMensual();
 }
 async function registrarse() {
 
@@ -982,6 +1007,8 @@ if (
         .style.display = "block";
 
     cargarPresupuestos();
+    cargarResumenGastos();
+    cargarGastos();
 
 } else {
 
@@ -1408,5 +1435,176 @@ function masAcciones(id) {
         eliminarPresupuesto(id);
 
     }
+
+}
+function mostrarFormularioGasto() {
+
+    document
+        .getElementById("formularioGasto")
+        .style.display = "block";
+
+}
+async function guardarGasto() {
+
+    const concepto =
+        document.getElementById("conceptoGasto").value;
+
+    const monto =
+        Number(
+            document.getElementById("montoGasto").value
+        );
+
+    const respuesta =
+        await fetch("/gastos", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                fecha: new Date()
+                    .toISOString()
+                    .slice(0, 10),
+
+                concepto,
+
+                monto,
+
+                usuarioId: 1
+
+            })
+
+        });
+
+    const datos =
+        await respuesta.json();
+
+    alert(
+        "Gasto guardado. ID: " +
+        datos.id
+    );
+    cargarGastos();
+    cargarResumenGastos();
+    cargarPresupuestos();
+
+}
+async function cargarResumenGastos() {
+
+    const respuesta =
+        await fetch("/gastos/resumen");
+
+    const datos =
+        await respuesta.json();
+
+    const gastos =
+        Number(datos.totalGastos || 0);
+
+    document.getElementById(
+        "totalGastos"
+    ).textContent =
+        "$" +
+        gastos.toLocaleString("es-AR");
+
+}
+async function cargarGastos() {
+
+    const respuesta =
+        await fetch("/gastos");
+
+    const gastos =
+        await respuesta.json();
+
+    const lista =
+        document.getElementById("listaGastos");
+
+    lista.innerHTML = "";
+
+    gastos.forEach(gasto => {
+
+        const fecha =
+            new Date(gasto.fecha)
+            .toLocaleDateString("es-AR");
+
+        lista.innerHTML += `
+            <tr>
+                <td>${fecha}</td>
+                <td>${gasto.concepto}</td>
+                <td>$${Number(gasto.monto).toLocaleString("es-AR")}</td>
+                <td>
+                    <button onclick="eliminarGasto(${gasto.id})">
+                        🗑
+                    </button>
+                </td>
+            </tr>
+        `;
+
+    });
+
+}
+async function eliminarGasto(id) {
+
+    if (!confirm("¿Eliminar gasto?")) {
+        return;
+    }
+
+    await fetch(`/gastos/${id}`, {
+        method: "DELETE"
+    });
+
+    cargarGastos();
+    cargarResumenGastos();
+    cargarPresupuestos();
+    cargarResumenMensual();
+
+}
+async function cargarResumenMensual() {
+
+    const gastosRespuesta =
+        await fetch("/gastos/resumen-mensual");
+
+    const gastosDatos =
+        await gastosRespuesta.json();
+
+    const gastosMes =
+        Number(gastosDatos.totalGastosMes || 0);
+
+    document.getElementById(
+        "gastosMes"
+    ).textContent =
+        "$" +
+        gastosMes.toLocaleString("es-AR");
+
+    const cobradoRespuesta =
+        await fetch(
+            "/presupuestos/resumen-mensual"
+        );
+
+    const cobradoDatos =
+        await cobradoRespuesta.json();
+
+    const cobradoMes =
+        Number(
+            cobradoDatos.totalCobradoMes || 0
+        );
+
+    const gananciaMes =
+        cobradoMes - gastosMes;
+
+    document.getElementById(
+        "gananciaMes"
+    ).textContent =
+        "$" +
+        gananciaMes.toLocaleString("es-AR");
+
+}
+function descargarBackup() {
+
+    window.open(
+        "/backup",
+        "_blank"
+    );
 
 }

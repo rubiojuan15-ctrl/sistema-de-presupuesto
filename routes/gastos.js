@@ -1,27 +1,21 @@
 const express = require("express");
 const router = express.Router();
-
 const db = require("../database/db");
 
-router.post("/", (req, res) => {
-    
-    router.get("/", (req, res) => {
+// LISTAR GASTOS
+router.get("/", (req, res) => {
 
     db.all(
         `
         SELECT *
         FROM gastos
-        ORDER BY id DESC
+        ORDER BY fecha DESC, id DESC
         `,
         [],
         (err, rows) => {
 
             if (err) {
-
-                return res
-                    .status(500)
-                    .json(err);
-
+                return res.status(500).json(err);
             }
 
             res.json(rows);
@@ -30,6 +24,9 @@ router.post("/", (req, res) => {
     );
 
 });
+
+// CREAR GASTO
+router.post("/", (req, res) => {
 
     const {
         fecha,
@@ -58,17 +55,80 @@ router.post("/", (req, res) => {
         function(err) {
 
             if (err) {
-
-                return res
-                    .status(500)
-                    .json(err);
-
+                return res.status(500).json(err);
             }
 
             res.json({
                 ok: true,
                 id: this.lastID
             });
+
+        }
+    );
+
+});
+router.get("/resumen", (req, res) => {
+
+    db.get(
+        `
+        SELECT
+            COALESCE(SUM(monto), 0) AS totalGastos
+        FROM gastos
+        `,
+        [],
+        (err, row) => {
+
+            if (err) {
+                return res.status(500).json(err);
+            }
+
+            res.json(row);
+
+        }
+    );
+
+});
+router.delete("/:id", (req, res) => {
+
+    db.run(
+        `
+        DELETE FROM gastos
+        WHERE id = ?
+        `,
+        [req.params.id],
+        function(err) {
+
+            if (err) {
+                return res.status(500).json(err);
+            }
+
+            res.json({
+                ok: true
+            });
+
+        }
+    );
+
+});
+router.get("/resumen-mensual", (req, res) => {
+
+    db.all(
+        `
+        SELECT
+            id,
+            fecha,
+            estado,
+            total
+        FROM presupuestos
+        `,
+        [],
+        (err, rows) => {
+
+            if (err) {
+                return res.status(500).json(err);
+            }
+
+            res.json(rows);
 
         }
     );

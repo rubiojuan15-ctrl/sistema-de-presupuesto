@@ -164,13 +164,38 @@
                 <button onclick="guardarPresupuesto()">
                     Guardar presupuesto
                 </button>
-
                 <button onclick="cargarPresupuestos()">
                     Ver presupuestos
                 </button>
+                
                 <button onclick="exportarExcel()">
                     Excel
                 </button>
+                <button onclick="mostrarFormularioGasto()">
+                    💸 Nuevo gasto
+                </button>
+                <button onclick="descargarBackup()">
+                    💾 Descargar respaldo
+                </button>
+                <div id="formularioGasto" style="display:none;">
+
+                    <h3>Nuevo gasto</h3>
+
+                    <input
+                        type="text"
+                        id="conceptoGasto"
+                        placeholder="Concepto">
+
+                    <input
+                        type="number"
+                        id="montoGasto"
+                        placeholder="Monto">
+
+                    <button onclick="guardarGasto()">
+                        Guardar gasto
+                    </button>
+
+                </div>
                 <div id="dashboard">
                     <div id="dashboard">
 
@@ -263,8 +288,39 @@
                     ⚠️ Vencidos
                     <h3 id="dashVencidos">0</h3>
                 </div>
-
+                <div class="card-dashboard">
+                    💸 Gastos
+                    <h3 id="totalGastos">$0</h3>
+                </div>
+                <div class="card-dashboard">
+                    📅 Gastos mes
+                    <h3 id="gastosMes">$0</h3>
+                </div>
+                <div class="card-dashboard">
+                    📈 Ganancia
+                    <h3 id="gananciaReal">$0</h3>
+                </div>
+                <div class="card-dashboard">
+                    📈 Ganancia mes
+                    <h3 id="gananciaMes">$0</h3>
+                </div>
             </div>
+            <h3>💸 Gastos registrados</h3>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Concepto</th>
+                        <th>Monto</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody id="listaGastos"></tbody>
+
+            </table>
             <table>
 
                 <thead>
