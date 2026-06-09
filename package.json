@@ -6,13 +6,13 @@
   "scripts": {
     "start": "node app.js"
   },
- "dependencies": {
-  "bcrypt": "latest",
-  "exceljs": "^4.4.0",
-  "express": "latest",
-  "jsonwebtoken": "latest",
-  "multer": "latest",
-  "pdfkit": "latest",
-  "sqlite3": "^5.1.7"
-}
+  "dependencies": {
+    "bcrypt": "latest",
+    "exceljs": "latest",
+    "express": "latest",
+    "jsonwebtoken": "latest",
+    "multer": "latest",
+    "pdfkit": "latest",
+    "sqlite3": "latest"
+  }
 }
