@@ -67,6 +67,30 @@
         </button>
 
                 <h1>Sistema de presupuestos</h1>
+                <div class="filtros">
+
+                <input
+                    type="text"
+                    id="busqueda"
+                    placeholder="Buscar cliente o teléfono"
+                >
+
+                <select id="filtroEstado">
+                    <option value="">Todos los estados</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="En proceso">En proceso</option>
+                    <option value="Saldo pendiente">Saldo pendiente</option>
+                    <option value="Cobrado total">Cobrado total</option>
+                </select>
+
+                <select id="filtroVencimiento">
+                    <option value="">Todos</option>
+                    <option value="hoy">Vencen hoy</option>
+                    <option value="semana">Esta semana</option>
+                    <option value="atrasados">Atrasados</option>
+                </select>
+
+            </div>
                 <div id="dashboard">
 
                     <div class="card-dashboard">
@@ -90,11 +114,11 @@
                     </div>
 
                 </div>
-                <input
+                <!--<input
                 type="text"
                 id="busqueda"
                 placeholder="Buscar presupuesto..."
-                >
+                >-->
                 <div class="topbar">
 
                     <div>

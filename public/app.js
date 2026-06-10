@@ -681,9 +681,7 @@ async function registrarPago(id) {
 
     }
 
-    const respuesta = await fetch(
-
-        "/presupuestos/cobrar/" + id,
+    const respuesta = await fetch("/presupuestos/cobrar/" + id,
 
         {
 
@@ -1298,9 +1296,7 @@ function mostrarNotificacion(texto) {
 }
 async function verHistorial(id) {
 
-    const respuesta = await fetch(
-
-        "/presupuestos/pagos/" + id,
+    const respuesta = await fetch("/presupuestos/pagos/" + id,
 
         {
 
@@ -1454,8 +1450,7 @@ async function guardarGasto() {
             document.getElementById("montoGasto").value
         );
 
-    const respuesta =
-        await fetch("/gastos", {
+    const respuesta = await fetch("/gastos", {
 
             method: "POST",
 
@@ -1608,3 +1603,23 @@ function descargarBackup() {
     );
 
 }
+document
+    .getElementById("busqueda")
+    .addEventListener(
+        "input",
+        cargarPresupuestos
+    );
+
+document
+    .getElementById("filtroEstado")
+    .addEventListener(
+        "change",
+        cargarPresupuestos
+    );
+
+document
+    .getElementById("filtroVencimiento")
+    .addEventListener(
+        "change",
+        cargarPresupuestos
+    );
