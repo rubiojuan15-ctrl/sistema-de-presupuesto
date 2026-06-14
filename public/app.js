@@ -301,6 +301,28 @@ async function cargarPresupuestos() {
     }
 
     const presupuestos = await respuesta.json();
+    const porCobrar = presupuestos
+    .filter(
+        p =>
+            p.estado !== "Cobrado total" &&
+            p.estado !== "Cobrado"
+    )
+    .reduce(
+        (total, p) =>
+            total + Number(p.saldo || 0),
+        0
+    );
+    console.log(
+    document.getElementById("dashPorCobrar")
+);
+            console.log("POR COBRAR:", porCobrar);
+            console.log(presupuestos);
+
+        document.getElementById(
+            "dashPorCobrar"
+        ).textContent =
+            "$" +
+            porCobrar.toLocaleString("es-AR");
     
     const resumenRespuesta = await fetch("/presupuestos/resumen",
         {

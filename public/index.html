@@ -1,31 +1,14 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de presupuestos</title>
-
     <link rel="stylesheet" href="style.css">
-    <link
-        rel="manifest"
-        href="manifest.json"
-    >
-    <meta
-    name="theme-color"
-    content="#000000"
-    >
-
-    <link
-        rel="apple-touch-icon"
-        href="icono.png"
-    >
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="icono.png">
 </head>
-
 <body>
 <div class="container">
     <div id="login">  
@@ -47,34 +30,32 @@
         </button>
     </div>
     <div id="mobileBar">
-
         <button onclick="window.scrollTo(0,0)">
             Inicio
         </button>
-
         <button onclick="cargarPresupuestos()">
             Actualizar
         </button>
-
         <button onclick="exportarExcel()">
             Excel
         </button>
-
     </div>
     <div id="sistema">
          <button onclick="logout()">
             Cerrar sesión
         </button>
 
-                <h1>Sistema de presupuestos</h1>
-                <div class="filtros">
-
+        <div class="topbar">
+                <div>
+                    <h1>Sistema de Presupuestos</h1>
+                </div>
+            </div>
+            <div class="filtros">
                 <input
                     type="text"
                     id="busqueda"
                     placeholder="Buscar cliente o teléfono"
                 >
-
                 <select id="filtroEstado">
                     <option value="">Todos los estados</option>
                     <option value="Pendiente">Pendiente</option>
@@ -82,80 +63,40 @@
                     <option value="Saldo pendiente">Saldo pendiente</option>
                     <option value="Cobrado total">Cobrado total</option>
                 </select>
-
                 <select id="filtroVencimiento">
                     <option value="">Todos</option>
                     <option value="hoy">Vencen hoy</option>
                     <option value="semana">Esta semana</option>
                     <option value="atrasados">Atrasados</option>
                 </select>
-
             </div>
-                <div id="dashboard">
-
+               <div id="dashboard">
                     <div class="card-dashboard">
                         <h3 id="totalPresupuestos">0</h3>
                         <p>Presupuestos</p>
                     </div>
-
                     <div class="card-dashboard">
                         <h3 id="totalPendientes">0</h3>
                         <p>Pendientes</p>
                     </div>
-
                     <div class="card-dashboard">
                         <h3 id="totalProceso">0</h3>
                         <p>En proceso</p>
                     </div>
-
                     <div class="card-dashboard">
                         <h3 id="totalFacturado">$0</h3>
                         <p>Facturación</p>
                     </div>
-
-                </div>
-                <!--<input
-                type="text"
-                id="busqueda"
-                placeholder="Buscar presupuesto..."
-                >-->
-                <div class="topbar">
-
-                    <div>
-
-                        <h1>🪵 Sistema de Presupuestos</h1>
-
-                        <p>
-                            Carpintería, restauración, enmarcados
-                        </p>
-
-                    </div>
-
-                    <div>
-
-                        <button onclick="logout()">
-                            🚪 Salir
-                        </button>
-
-                    </div>
-
-                </div>
+               </div>
                 <div class="formulario">
                     <input type="text" id="cliente" placeholder="Cliente">
-
                     <input type="tel" id="telefono" placeholder="Telefono con codigo de pais">
-
                     <input type="text" id="direccion" placeholder="Direccion">
-
                     <input type="text" id="trabajo" placeholder="Trabajo">
-
                     <textarea id="observaciones" placeholder="Observaciones de trabajo. Ej: Reparar pata trasera; Mantener color original; Tapizado a cargo del cliente"></textarea>
-
                     <label for="fechaVencimiento">Vencimiento</label>
                     <input type="date" id="fechaVencimiento">
-
                     <input type="number" id="materiales" placeholder="Costo de materiales">
-
                     <input type="number" id="manoDeObra" placeholder="Precio mano de obra">
                     <input
                     type="number"
@@ -174,7 +115,6 @@
                     <option>Saldo pendiente</option>
                     <option>Cobrado total</option>
                 </select>
-
                 <input
                     type="file"
                     id="imagen"
@@ -182,16 +122,13 @@
                     capture="environment"
                     multiple
                 >
-
                 <h2 id="total">Total: $0</h2>
-
                 <button onclick="guardarPresupuesto()">
                     Guardar presupuesto
                 </button>
                 <button onclick="cargarPresupuestos()">
                     Ver presupuestos
                 </button>
-                
                 <button onclick="exportarExcel()">
                     Excel
                 </button>
@@ -202,29 +139,22 @@
                     💾 Descargar respaldo
                 </button>
                 <div id="formularioGasto" style="display:none;">
-
                     <h3>Nuevo gasto</h3>
-
                     <input
                         type="text"
                         id="conceptoGasto"
                         placeholder="Concepto">
-
                     <input
                         type="number"
                         id="montoGasto"
                         placeholder="Monto">
-
                     <button onclick="guardarGasto()">
                         Guardar gasto
                     </button>
-
                 </div>
-                <div id="dashboard">
-                    <div id="dashboard">
-
                     <canvas id="grafico"></canvas>
                     <canvas id="graficoMensual"></canvas>
+                <div id="dashboard">
                     <div class="card">
                         <h3>💰 Total facturado</h3>
                         <p id="totalFacturado">$0</p>
@@ -233,7 +163,6 @@
                         <h3>📋 Presupuestos</h3>
                         <p id="cantidadPresupuestos">0</p>
                     </div>
-
                     <div class="card">
                         <h3>📈 Promedio</h3>
                         <p id="promedio">$0</p>
@@ -242,72 +171,58 @@
                         <h3>🛠 Pendientes</h3>
                         <p id="cantidadPendientes">0</p>
                     </div>
+                    <div class="card">
+                        <h3>💵 Por cobrar</h3>
+                    <p id="dashPorCobrar" >$0</p>
+                </div>
             </div>
             <select id="filtroEstado">
-
                 <option value="">Todos</option>
-
                 <option value="Pendiente">
                     Pendientes
                 </option>
-
                 <option value="En proceso">
                     En proceso
                 </option>
-
                 <option value="Entregado">
                     Entregados
                 </option>
-
                 <option value="Seña">
                     Seña
                 </option>
-
                 <option value="Saldo pendiente">
                     Saldo pendiente
                 </option>
-
                 <option value="Cobrado total">
                     Cobrado total
                 </option>
-
             </select>
-
             <select id="filtroVencimiento">
-
                 <option value="">Todos los vencimientos</option>
-
                 <option value="hoy">
                     Vence hoy
                 </option>
-
                 <option value="semana">
                     Esta semana
                 </option>
-
                 <option value="atrasados">
                     Atrasados
                 </option>
-
             </select>
             <div id="alertas"></div>
             <div class="dashboard">
-
                 <div class="card-dashboard">
                     💵 Presupuestado
                     <h3 id="dashPresupuestado">$0</h3>
                 </div>
-
                 <div class="card-dashboard">
                     💰 Cobrado
                     <h3 id="dashCobrado">$0</h3>
                 </div>
-
                 <div class="card-dashboard">
                     📋 Pendiente
                     <h3 id="dashPendiente">$0</h3>
                 </div>
-
                 <div class="card-dashboard">
                     ⚠️ Vencidos
                     <h3 id="dashVencidos">0</h3>
@@ -330,9 +245,7 @@
                 </div>
             </div>
             <h3>💸 Gastos registrados</h3>
-
             <table>
-
                 <thead>
                     <tr>
                         <th>Fecha</th>
@@ -341,16 +254,11 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
-
                 <tbody id="listaGastos"></tbody>
-
             </table>
             <table>
-
                 <thead>
-                
                     <tr>
-
                         <th>Cliente</th>
                         <th>Trabajo</th>
                         <th>Total</th>
@@ -359,27 +267,17 @@
                         <th>Vencimiento</th>
                         <th>Estado</th>
                         <th>Acciones</th>
-
                     </tr>
-
                 </thead>
-
                 <tbody id="lista"></tbody>
-
             </table>
-  
-   
-                
                 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                 <div id="modalImagen">
                     <img id="imagenGrande">
                 </div>
                 <div id="comparador">
-
         <div class="comparador-content">
-
                 <img id="antes">
-
                 <input
                     type="range"
                     min="0"
@@ -387,17 +285,13 @@
                     value="50"
                     id="sliderComparador"
                 >
-
                 <img id="despues">
-
             </div>
-
         </div>
         <div id="notificacion"></div>
-                <script src="app.js"></script>
-    
-    
-</div>    
+            <script src="app.js"></script>
+        </div>
+    </div>    
 </body>
 
 </html>

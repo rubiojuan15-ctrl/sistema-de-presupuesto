@@ -78,7 +78,7 @@ li {
 
     background: black;
 
-    color: white;
+    color: #9c5d2e;
 
     padding: 20px;
 
@@ -90,6 +90,7 @@ li {
 .card h3 {
 
     margin-bottom: 10px;
+    
 }
 
 .card p {
@@ -178,7 +179,9 @@ tr:hover {
 }
 #sistema {
 
-    display: none;
+    display:none;
+    margin-bottom: 15px;
+    height: 15px;
 
 }
 .preview {
@@ -631,7 +634,9 @@ button {
 
 .card h3 {
     margin: 0;
-    color: #8b5a2b;
+    color: black;
+    font-weight: bold;
+    font-size: large;
 }
 
 .card p {
@@ -682,7 +687,7 @@ td img {
 }
 .topbar {
 
-    display: flex;
+    display: flexbox;
 
     justify-content: space-between;
 
@@ -690,11 +695,11 @@ td img {
 
     background: white;
 
-    padding: 20px;
+    padding: 25px;
 
     border-radius: 15px;
 
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 
     box-shadow: 0 3px 12px rgba(0,0,0,.08);
 
@@ -876,6 +881,8 @@ table {
     margin-bottom: 4px;
 
 }
-#sistema {
-    display: none;
+#dashPorCobrar {
+    color: #9c5d2e;
+    font-size: 2rem;
+    font-weight: bold;
 }
