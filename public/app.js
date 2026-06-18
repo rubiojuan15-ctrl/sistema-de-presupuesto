@@ -301,6 +301,47 @@ async function cargarPresupuestos() {
     }
 
     const presupuestos = await respuesta.json();
+    const clientes = {};
+
+        presupuestos.forEach(p => {
+
+            if (!p.cliente) return;
+
+            if (!clientes[p.cliente]) {
+
+                clientes[p.cliente] = 0;
+
+            }
+
+            clientes[p.cliente] += Number(
+                p.total || 0
+            );
+
+        });
+
+        let mejorCliente = "-";
+        let mayorMonto = 0;
+
+        Object.entries(clientes).forEach(
+
+            ([cliente, monto]) => {
+
+                if (monto > mayorMonto) {
+
+                    mayorMonto = monto;
+                    mejorCliente = cliente;
+
+                }
+
+            }
+
+        );
+        console.log(
+    document.getElementById("mejorCliente")
+);
+        document.getElementById(
+            "mejorCliente"
+        ).textContent = mejorCliente;
     const porCobrar = presupuestos
     .filter(
         p =>
@@ -450,21 +491,6 @@ async function cargarPresupuestos() {
         total + Number(p.total || 0),
         0
     );
-    document.getElementById(
-    "totalPresupuestos"
-    ).textContent =
-    presupuestos.length;
-
-    document.getElementById(
-        "totalPendientes"
-    ).textContent =
-    pendientesCantidad;
-
-    document.getElementById(
-        "totalProceso"
-    ).textContent =
-    enProceso;
-
     document.getElementById(
         "totalFacturado"
     ).textContent =
