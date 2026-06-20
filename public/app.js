@@ -1,4 +1,5 @@
 const sistema = document.getElementById("sistema");
+const API ="https://sistema-de-presupuesto.onrender.com";
 const busqueda = document.getElementById("busqueda");
 const cliente = document.getElementById("cliente");
 const telefono = document.getElementById("telefono");
@@ -301,6 +302,47 @@ async function cargarPresupuestos() {
     }
 
     const presupuestos = await respuesta.json();
+    
+    const hoy = new Date();
+
+            const mesActual =
+                hoy.getMonth() + 1;
+
+            const anioActual =
+                hoy.getFullYear();
+
+            const facturacionMes =
+                presupuestos
+                    .filter(p => {
+
+            if (!p.fecha) return false;
+
+            const partes =
+                p.fecha.split("/");
+
+            const mes =
+                Number(partes[1]);
+
+            const anio =
+                Number(partes[2]);
+
+            return (
+                mes === mesActual &&
+                anio === anioActual
+            );
+
+        })
+        .reduce(
+            (total, p) =>
+                total + Number(p.total || 0),
+            0
+        );
+
+document.getElementById("facturacionMes").textContent = "$" +
+    facturacionMes.toLocaleString(
+        "es-AR"
+    );
+    
     const clientes = {};
 
         presupuestos.forEach(p => {
@@ -336,12 +378,62 @@ async function cargarPresupuestos() {
             }
 
         );
-        console.log(
-    document.getElementById("mejorCliente")
+        console.log(document.getElementById("mejorCliente")
 );
-        document.getElementById(
-            "mejorCliente"
-        ).textContent = mejorCliente;
+        document.getElementById("mejorCliente").textContent = mejorCliente;
+        document.getElementById("montoMejorCliente").textContent = "$" + mayorMonto.toLocaleString("es-AR");
+        const meses = {};
+
+            presupuestos.forEach(p => {
+
+                if (!p.fecha) return;
+
+                const partes = p.fecha.split("/");
+
+                const clave =
+                    partes[1] + "/" + partes[2];
+
+                if (!meses[clave]) {
+
+                    meses[clave] = 0;
+
+                }
+
+                meses[clave] += Number(
+                    p.total || 0
+                );
+
+            });
+
+            let mejorMes = "-";
+            let mayorFacturacion = 0;
+
+            Object.entries(meses).forEach(
+
+                ([mes, monto]) => {
+
+                    if (monto > mayorFacturacion) {
+
+                        mayorFacturacion = monto;
+                        mejorMes = mes;
+
+                    }
+
+                }
+
+            );
+
+            document.getElementById(
+                "mejorMes"
+            ).textContent = mejorMes;
+
+            document.getElementById(
+                "montoMejorMes"
+            ).textContent =
+                "$" +
+                mayorFacturacion.toLocaleString(
+                    "es-AR"
+                );
     const porCobrar = presupuestos
     .filter(
         p =>
@@ -421,7 +513,7 @@ async function cargarPresupuestos() {
         ).textContent =
             "$" +
             ganancia.toLocaleString("es-AR");   
-    const hoy = new Date()
+    const fechaHoy = new Date()
         .toISOString()
         .split("T")[0];
 
@@ -441,7 +533,7 @@ async function cargarPresupuestos() {
     }
 
     if (
-        p.fechaVencimiento === hoy
+        p.fechaVencimiento === fechaHoy
     ) {
 
         alertas.innerHTML += `
@@ -454,7 +546,7 @@ async function cargarPresupuestos() {
     }
 
     if (
-        p.fechaVencimiento < hoy
+        p.fechaVencimiento < fechaHoy
         &&
         p.estado !==
         "Cobrado total"
@@ -667,11 +759,10 @@ async function editarPresupuesto(id) {
         }
         );
 
-    const presupuestos =
-        await respuesta.json();
+    const presupuestos = await respuesta.json();
+    
 
-    const presupuesto =
-        presupuestos.find(p => p.id == id);
+    const presupuesto = presupuestos.find(p => p.id == id);
 
     if (!presupuesto) {
 
@@ -945,7 +1036,7 @@ function crearGraficoMensual(presupuestos) {
 async function login() {
 
     const respuesta =
-        await fetch("/login", {
+        await fetch(API +"/login", {
 
             method: "POST",
 
@@ -1002,7 +1093,7 @@ async function login() {
 async function registrarse() {
 
     const respuesta =
-        await fetch("/registro", {
+        await fetch(API +"/registro", {
 
             method: "POST",
 
@@ -1252,8 +1343,8 @@ document
 
             );
 
-        const presupuestos =
-            await respuesta.json();
+        const presupuestos = await respuesta.json();
+        
 
         const p =
             presupuestos.find(
@@ -1407,8 +1498,7 @@ async function verDetalle(id) {
         }
     );
 
-    const presupuestos =
-        await respuesta.json();
+    const presupuestos = await respuesta.json();
 
     const p =
         presupuestos.find(
