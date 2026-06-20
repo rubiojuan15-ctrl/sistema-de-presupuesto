@@ -59,6 +59,21 @@ button {
 
     transition: 0.3s;
 }
+@media (max-width: 768px) {
+
+    td[data-label="Acciones"] {
+        display: flex;
+        gap: 5px;
+    }
+
+    td[data-label="Acciones"] button {
+        flex: 1;
+        min-width: 45px;
+        padding: 10px;
+        margin: 0;
+    }
+
+}
 li {
 
     margin-bottom: 10px;
@@ -868,21 +883,126 @@ table {
 }
 .acciones {
 
-    min-width: 120px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
 
 }
 
 .acciones button {
 
-    display: block;
-
-    width: 100%;
-
-    margin-bottom: 4px;
+    width: auto;
+    min-width: 45px;
+    margin: 0;
+    padding: 10px;
 
 }
 #dashPorCobrar {
     color: #9c5d2e;
     font-size: 2rem;
+    font-weight: bold;
+}
+@media (max-width: 768px) {
+
+    td[data-label="Acciones"] {
+        display: flex;
+        gap: 5px;
+    }
+
+    td[data-label="Acciones"] button {
+        flex: 1;
+        min-width: 50px;
+        padding: 10px;
+    }
+
+}
+@media (max-width: 768px) {
+
+    .card {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+}
+@media (max-width: 768px) {
+
+    .acciones {
+
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        flex-wrap: nowrap;
+
+    }
+
+    .acciones button {
+
+        flex: 1;
+        min-width: 50px;
+        padding: 12px 6px;
+
+    }
+
+}
+@media (max-width: 768px) {
+
+    td {
+        padding: 6px 0;
+    }
+
+    td::before {
+        margin-bottom: 2px;
+    }
+
+}
+td[data-label="Total"] {
+    font-size: 20px;
+    font-weight: bold;
+    color: #8b5a2b;
+}
+@media (max-width: 768px) {
+
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 5px;
+    }
+
+}
+@media (max-width: 768px) {
+
+    #dashboard {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 15px 0;
+    }
+
+    .card-dashboard,
+    .card {
+        min-width: unset;
+        width: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+    }
+
+    .card-dashboard h3,
+    .card h3 {
+        font-size: 16px;
+    }
+
+    .card-dashboard p,
+    .card p {
+        font-size: 24px;
+        margin-top: 8px;
+    }
+
+}
+#dashPorCobrar,
+#dashGanancia,
+#dashFacturado {
+    color: #8b5a2b;
     font-weight: bold;
 }
