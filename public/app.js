@@ -1,5 +1,5 @@
 const sistema = document.getElementById("sistema");
-const API ="https://sistema-de-presupuesto.onrender.com";
+const API ="";
 const busqueda = document.getElementById("busqueda");
 const cliente = document.getElementById("cliente");
 const telefono = document.getElementById("telefono");

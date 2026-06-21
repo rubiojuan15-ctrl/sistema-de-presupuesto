@@ -1,3 +1,4 @@
+const pool = require("../database/postgres");
 const db = require("../database/db");
 const auth = require("../middlewares/auth");
 const express = require("express");
@@ -6,6 +7,26 @@ const multer = require("multer");
 
 router.get('/', (req, res) => {
     res.send('Ruta presupuestos funcionando');
+});
+router.get("/test-postgres", async (req, res) => {
+
+    try {
+
+        const resultado =
+            await pool.query(
+                "SELECT * FROM presupuestos ORDER BY id DESC"
+            );
+
+        res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).send(error.message);
+
+    }
+
 });
 const storage = multer.diskStorage({
     
@@ -31,89 +52,37 @@ const upload = multer({
     storage
 });
 
-router.get("/obtener-presupuestos", auth, (req, res) => {
-    const usuarioId = req.usuario.id;
-    const busqueda = req.query.busqueda || "";
-    const terminosBusqueda = busqueda
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
-    const estado = req.query.estado || "";
-    const vencimiento = req.query.vencimiento || "";
-    const hoy = new Date();
-    const hoyISO = hoy.toISOString().slice(0, 10);
-    const finSemana = new Date(hoy);
-    finSemana.setDate(hoy.getDate() + 7);
-    const finSemanaISO = finSemana.toISOString().slice(0, 10);
-    let filtroVencimiento = "";
-    const parametrosVencimiento = [];
+router.get("/obtener-presupuestos", auth, async (req, res) => {
 
-    if (vencimiento === "hoy") {
+    try {
 
-        filtroVencimiento = "AND fechaVencimiento = ?";
-        parametrosVencimiento.push(hoyISO);
+        const usuarioId = req.usuario.id;
 
-    } else if (vencimiento === "semana") {
+        const resultado = await pool.query(
+            `
+            SELECT *
+            FROM presupuestos
+            WHERE usuarioId = $1
+            ORDER BY id DESC
+            `,
+            [usuarioId]
+        );
 
-        filtroVencimiento = "AND fechaVencimiento >= ? AND fechaVencimiento <= ?";
-        parametrosVencimiento.push(hoyISO, finSemanaISO);
+        res.json(resultado.rows);
 
-    } else if (vencimiento === "atrasados") {
+    } catch (error) {
 
-        filtroVencimiento = "AND fechaVencimiento < ? AND estado != ?";
-        parametrosVencimiento.push(hoyISO, "Cobrado total");
+        console.error(error);
+
+        res.status(500).send("Error al obtener presupuestos");
 
     }
-
-    const filtroBusqueda = terminosBusqueda
-        .map(() => `
-            AND (
-                cliente LIKE ?
-                OR telefono LIKE ?
-            )
-        `)
-        .join("");
-
-    const parametrosBusqueda = terminosBusqueda.flatMap((termino) => [
-        "%" + termino + "%",
-        "%" + termino + "%"
-    ]);
-
-        db.all(`
-           SELECT *
-            FROM presupuestos
-           WHERE usuarioId = ?
-            ${filtroBusqueda}
-            AND estado LIKE ?
-            ${filtroVencimiento}
-            ORDER BY id DESC
-        `,
-    [
-        usuarioId,
-        ...parametrosBusqueda,
-        "%" + estado + "%",
-        ...parametrosVencimiento
-    ],
-    (err, rows) => {
-
-        if (err) {
-
-            console.log(err);
-
-            return res.status(500).send("Error al obtener presupuestos");
-
-        }
-
-        res.json(rows);
-
-    });
-    
 
 });
 //guardar presupuesto
 router.post(
     "/guardar-presupuesto", auth, upload.array("imagen", 10),
-    (req, res) => {
+    async (req, res) => {
         console.log(req.usuario);
         const cliente =
             req.body.cliente;
@@ -195,62 +164,61 @@ router.post(
                 req.body.saldo
             );
             console.log("INSERT NUEVO CON SENA");
-        db.run(
-            `
-            INSERT INTO presupuestos
-            (
-                cliente,
-                telefono,
-                direccion,
-                trabajo,
-                observaciones,
-                materiales,
-                manoDeObra,
-                total,
-                sena,
-                saldo,
-                fecha,
-                fechaVencimiento,
-                estado,
-                imagenes,
-                usuarioId
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `,
-            [   //array
-                cliente,
-                telefono,
-                direccion,
-                trabajo,
-                observaciones,
-                materiales,
-                manoDeObra,
-                total,
-                sena,
-                saldo,
-                fecha,
-                fechaVencimiento,
-                estado,
-                imagenes,
-                usuarioId
-            ],
-            function(err) {
+        try {
 
-                if (err) {
+    await pool.query(
+        `
+        INSERT INTO presupuestos
+        (
+            cliente,
+            telefono,
+            direccion,
+            trabajo,
+            observaciones,
+            materiales,
+            manoDeObra,
+            total,
+            sena,
+            saldo,
+            fecha,
+            fechaVencimiento,
+            estado,
+            imagenes,
+            usuarioId
+        )
+        VALUES
+        (
+            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
+        )
+        `,
+        [
+            cliente,
+            telefono,
+            direccion,
+            trabajo,
+            observaciones,
+            materiales,
+            manoDeObra,
+            total,
+            sena,
+            saldo,
+            fecha,
+            fechaVencimiento,
+            estado,
+            imagenes,
+            usuarioId
+        ]
+    );
 
-                    console.log(err);
+    res.status(201).send("Guardado");
 
-                    return res
-                        .status(500)
-                        .send("Error al guardar");
+        } catch (err) {
 
-                }
+            console.error(err);
 
-                res.status(201).send("Guardado");
+            res.status(500).send("Error al guardar");
 
-            }
-
-        );
+        }
 
     }
 
