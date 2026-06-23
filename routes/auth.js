@@ -5,19 +5,35 @@ const pool = require("../database/postgres");
 
 const router = express.Router();
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function normalizeEmail(value) {
+    return String(value || "").trim().toLowerCase();
+}
+
+function isValidEmail(email) {
+    return EMAIL_RE.test(email);
+}
+
 router.post("/login", async (req, res) => {
+    const email = normalizeEmail(req.body.email);
     const usuario = String(req.body.usuario || "").trim();
     const password = String(req.body.password || "");
 
-    if (!usuario || !password) {
-        return res.status(400).send("Faltan usuario o contraseña");
+    if (!password || (!email && !usuario)) {
+        return res.status(400).send("Faltan credenciales o contraseña");
     }
 
     try {
-        const resultado = await pool.query(
-            "SELECT id, usuario, password FROM usuarios WHERE usuario = $1",
-            [usuario]
-        );
+        const resultado = email
+            ? await pool.query(
+                  "SELECT id, usuario, email, password FROM usuarios WHERE LOWER(email) = $1",
+                  [email]
+              )
+            : await pool.query(
+                  "SELECT id, usuario, email, password FROM usuarios WHERE usuario = $1",
+                  [usuario]
+              );
         const row = resultado.rows[0];
 
         if (!row || !(await bcrypt.compare(password, row.password))) {
@@ -30,7 +46,12 @@ router.post("/login", async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        res.json({ token, usuario: row.usuario, id: row.id });
+        res.json({
+            token,
+            usuario: row.usuario,
+            email: row.email || "",
+            id: row.id
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send("Error al iniciar sesión");
@@ -39,6 +60,7 @@ router.post("/login", async (req, res) => {
 
 router.post("/registro", async (req, res) => {
     const usuario = String(req.body.usuario || "").trim();
+    const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "");
 
     if (usuario.length < 3 || password.length < 6) {
@@ -47,26 +69,45 @@ router.post("/registro", async (req, res) => {
             .send("El usuario debe tener 3 caracteres y la contraseña 6");
     }
 
+    if (!email || !isValidEmail(email)) {
+        return res.status(400).send("Ingresá un email válido");
+    }
+
     try {
-        const passwordHash = await bcrypt.hash(password, 10);
-        const resultado = await pool.query(
+        const existente = await pool.query(
             `
-            INSERT INTO usuarios (usuario, password)
-            VALUES ($1, $2)
-            ON CONFLICT (usuario) DO NOTHING
-            RETURNING id
+            SELECT usuario, email
+            FROM usuarios
+            WHERE usuario = $1 OR LOWER(email) = $2
+            LIMIT 1
             `,
-            [usuario, passwordHash]
+            [usuario, email]
         );
 
-        if (resultado.rowCount === 0) {
-            return res.status(409).send("El usuario ya existe");
+        if (existente.rowCount > 0) {
+            const row = existente.rows[0];
+            if (row.usuario === usuario) {
+                return res.status(409).send("El usuario ya existe");
+            }
+            return res.status(409).send("El email ya está registrado");
         }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+        await pool.query(
+            `
+            INSERT INTO usuarios (usuario, email, password)
+            VALUES ($1, $2, $3)
+            `,
+            [usuario, email, passwordHash]
+        );
 
         res.status(201).send("Usuario creado");
     } catch (error) {
         console.error(error);
-        res.status(500).send("Error al crear el usuario");
+        const detalle = error.code === "42703"
+            ? "Falta actualizar la base de datos (columna email)"
+            : "Error al crear el usuario";
+        res.status(500).send(detalle);
     }
 });
 

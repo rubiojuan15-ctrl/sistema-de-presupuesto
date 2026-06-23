@@ -59,6 +59,16 @@ async function ensureSchema(client = pool) {
         CREATE INDEX IF NOT EXISTS pagos_presupuestoid_idx
             ON pagos (presupuestoid);
     `);
+
+    await client.query(`
+        ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email TEXT;
+    `);
+
+    await client.query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS usuarios_email_idx
+            ON usuarios (LOWER(email))
+            WHERE email IS NOT NULL;
+    `);
 }
 
 module.exports = ensureSchema;

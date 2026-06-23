@@ -29,6 +29,9 @@ const filtroVencimiento = document.getElementById("filtroVencimiento");
 const usuario =
     document.getElementById("usuario");
 
+const email =
+    document.getElementById("email");
+
 const password =
     document.getElementById("password");
 
@@ -1055,7 +1058,10 @@ async function login() {
             body: JSON.stringify({
 
                 usuario:
-                    usuario.value,
+                    usuario.value.trim(),
+
+                email:
+                    email.value.trim(),
 
                 password:
                     password.value
@@ -1079,6 +1085,9 @@ async function login() {
             "usuarioId",
             datos.id
         );
+        if (datos.email) {
+            localStorage.setItem("email", datos.email);
+        }
         document
         .getElementById("login")
         .style.display = "none";
@@ -1098,44 +1107,50 @@ async function login() {
     cargarResumenMensual();
 }
 async function registrarse() {
+    const usuarioVal = usuario.value.trim();
+    const emailVal = email.value.trim();
+    const passwordVal = password.value;
 
-    const respuesta =
-        await fetch(API +"/registro", {
-
-            method: "POST",
-
-            headers: {
-                
-                "Content-Type":
-                    "application/json",
-                      authorization:
-                localStorage.getItem(
-                    "token"
-                )        
-            },
-
-            body: JSON.stringify({
-
-                usuario:
-                    usuario.value,
-
-                password:
-                    password.value
-
-            })
-
-        });
-
-    if (respuesta.ok) {
-
-        alert("Usuario creado");
-
-    } else {
-
-        alert("Error");
-
+    if (usuarioVal.length < 3) {
+        alert("El usuario debe tener al menos 3 caracteres");
+        return;
     }
 
+    if (passwordVal.length < 6) {
+        alert("La contraseña debe tener al menos 6 caracteres");
+        return;
+    }
+
+    if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+        alert("Ingresá un email válido");
+        return;
+    }
+
+    try {
+        const respuesta = await fetch(API + "/registro", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                usuario: usuarioVal,
+                email: emailVal,
+                password: passwordVal
+            })
+        });
+
+        const mensaje = await respuesta.text();
+
+        if (respuesta.ok) {
+            alert("Usuario creado. Ahora podés iniciar sesión.");
+            return;
+        }
+
+        alert(mensaje || "No se pudo crear el usuario");
+    } catch (error) {
+        console.error(error);
+        alert("No se pudo conectar con el servidor");
+    }
 }
 if (
     localStorage.getItem("logueado")
@@ -1174,6 +1189,8 @@ function logout() {
     localStorage.removeItem("token");
 
     localStorage.removeItem("usuarioId");
+
+    localStorage.removeItem("email");
 
     location.reload();
 

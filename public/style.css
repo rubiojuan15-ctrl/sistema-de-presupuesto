@@ -158,6 +158,12 @@ strong {
     margin-bottom: 12px;
 }
 
+.login-hint {
+    margin: -4px 0 18px;
+    color: var(--ink-soft);
+    font-size: 13px;
+}
+
 label {
     color: var(--ink);
     font-size: 13px;
