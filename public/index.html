@@ -12,6 +12,11 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icono.png">
+    <script>
+        if (window.Capacitor?.isNativePlatform?.()) {
+            document.documentElement.classList.add("capacitor");
+        }
+    </script>
 </head>
 <body>
     <main class="app-shell">
@@ -34,6 +39,16 @@
                     <button class="button button-primary" type="button" onclick="login()">Entrar</button>
                     <button class="button button-secondary" type="button" onclick="registrarse()">Crear cuenta</button>
                 </div>
+
+                <a class="android-download" href="/downloads/presupuestos-android.apk" download>
+                    <span class="android-logo" aria-hidden="true">A</span>
+                    <span>
+                        <strong>Descargar para Android</strong>
+                        <small>Versión 1.1 · Instalación directa</small>
+                    </span>
+                    <span class="download-arrow" aria-hidden="true">↓</span>
+                </a>
+                <p class="install-note">Android puede solicitar permiso para instalar aplicaciones desde el navegador.</p>
             </div>
         </section>
 
