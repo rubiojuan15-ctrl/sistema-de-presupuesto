@@ -257,6 +257,65 @@ textarea {
     flex: 1;
 }
 
+.android-download {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 13px;
+    color: #fff;
+    text-decoration: none;
+    background: var(--ink);
+    border-radius: 15px;
+    transition: transform .18s, background .18s;
+}
+
+.android-download:hover {
+    transform: translateY(-1px);
+    background: #26352e;
+}
+
+.android-logo {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    background: #a4d65e;
+    border-radius: 12px;
+    font-family: "Manrope", sans-serif;
+    font-weight: 800;
+}
+
+.android-download strong,
+.android-download small {
+    display: block;
+}
+
+.android-download small {
+    margin-top: 2px;
+    color: rgba(255, 255, 255, .62);
+    font-size: 11px;
+}
+
+.download-arrow {
+    margin-left: auto;
+    font-size: 21px;
+}
+
+.install-note {
+    margin: 9px 4px 0;
+    color: var(--ink-soft);
+    font-size: 11px;
+    text-align: center;
+}
+
+html.capacitor .android-download,
+html.capacitor .install-note {
+    display: none;
+}
+
 #sistema {
     display: none;
 }
