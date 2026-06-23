@@ -1,0 +1,8 @@
+{
+  "appId": "com.juan.presupuestos",
+  "appName": "Sistemas de Presupuestos",
+  "server": {
+    "url": "https://sistema-de-presupuesto.onrender.com",
+    "cleartext": false
+  }
+}

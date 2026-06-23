@@ -1,115 +1,73 @@
-console.log("AUTH NUEVO");
-
 const express = require("express");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const pool = require("../database/postgres");
 
 const router = express.Router();
 
-const bcrypt = require("bcrypt");
+router.post("/login", async (req, res) => {
+    const usuario = String(req.body.usuario || "").trim();
+    const password = String(req.body.password || "");
 
-const jwt = require("jsonwebtoken");
+    if (!usuario || !password) {
+        return res.status(400).send("Faltan usuario o contraseña");
+    }
 
-const db = require("../database/db");
-router.post("/login", (req, res) => {
+    try {
+        const resultado = await pool.query(
+            "SELECT id, usuario, password FROM usuarios WHERE usuario = $1",
+            [usuario]
+        );
+        const row = resultado.rows[0];
 
-    const {
-        usuario,
-        password
-    } = req.body;
-
-    db.get(
-        `
-        SELECT *
-        FROM usuarios
-        WHERE usuario = ?
-        `,
-        [usuario],
-        async (err, row) => {
-
-            if (err || !row) {
-
-                return res
-                    .status(401)
-                    .send("Incorrecto");
-
-            }
-
-            const correcta =
-                await bcrypt.compare(
-                    password,
-                    row.password
-                );
-
-            if (!correcta) {
-
-                return res
-                    .status(401)
-                    .send("Incorrecto");
-
-            }
-
-            const token = jwt.sign(
-                {
-                    id: row.id
-                },
-
-                "secreto123",
-
-                {
-                    expiresIn: "7d"
-                }
-
-            );
-            res.json({
-
-                token,
-
-                usuario: row.usuario,
-
-                id: row.id
-
-            });
-            
+        if (!row || !(await bcrypt.compare(password, row.password))) {
+            return res.status(401).send("Usuario o contraseña incorrectos");
         }
-    );
 
+        const token = jwt.sign(
+            { id: row.id },
+            process.env.JWT_SECRET || "secreto123",
+            { expiresIn: "7d" }
+        );
+
+        res.json({ token, usuario: row.usuario, id: row.id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error al iniciar sesión");
+    }
 });
+
 router.post("/registro", async (req, res) => {
+    const usuario = String(req.body.usuario || "").trim();
+    const password = String(req.body.password || "");
 
-    const {
-        usuario,
-        password
-    } = req.body;
+    if (usuario.length < 3 || password.length < 6) {
+        return res
+            .status(400)
+            .send("El usuario debe tener 3 caracteres y la contraseña 6");
+    }
 
-    const passwordHash =
-        await bcrypt.hash(password, 10);
+    try {
+        const passwordHash = await bcrypt.hash(password, 10);
+        const resultado = await pool.query(
+            `
+            INSERT INTO usuarios (usuario, password)
+            VALUES ($1, $2)
+            ON CONFLICT (usuario) DO NOTHING
+            RETURNING id
+            `,
+            [usuario, passwordHash]
+        );
 
-    db.run(
-        `
-        INSERT INTO usuarios
-        (
-            usuario,
-            password
-        )
-        VALUES (?, ?)
-        `,
-        [
-            usuario,
-            passwordHash
-        ],
-        function(err) {
-
-            if (err) {
-
-                return res
-                    .status(500)
-                    .send("Error");
-
-            }
-
-            res.send("Usuario creado");
-
+        if (resultado.rowCount === 0) {
+            return res.status(409).send("El usuario ya existe");
         }
-    );
 
+        res.status(201).send("Usuario creado");
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error al crear el usuario");
+    }
 });
+
 module.exports = router;

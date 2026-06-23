@@ -253,6 +253,10 @@ else {
             body: formData
 
         });
+        if (!respuesta.ok) {
+            alert(await respuesta.text() || "Error al guardar");
+            return;
+        }
         alert("Presupuesto guardado");
     }
 
@@ -498,7 +502,9 @@ document.getElementById("facturacionMes").textContent = "$" +
         ).textContent =
             resumen.vencidos;
         const gastosRespuesta =
-            await fetch("/gastos/resumen");
+            await fetch("/gastos/resumen", {
+                headers: { authorization: token() }
+            });
 
         const gastosDatos =
             await gastosRespuesta.json();
@@ -881,7 +887,8 @@ async function eliminarPresupuesto(id) {
 function descargarPDF(id) {
 
     window.open(
-        "/presupuestos/generar-pdf/" + id,
+        "/presupuestos/generar-pdf/" + id +
+        "?token=" + encodeURIComponent(token()),
         "_blank"
     );
 
@@ -1056,8 +1063,8 @@ async function login() {
             })
 
         });
-    const datos = await respuesta.json();
     if (respuesta.ok) {
+        const datos = await respuesta.json();
 
         alert("Bienvenido");
         localStorage.setItem(
@@ -1082,7 +1089,7 @@ async function login() {
         cargarPresupuestos();
     } else {
 
-        alert("Usuario incorrecto");
+        alert(await respuesta.text() || "Usuario incorrecto");
 
     }
     cargarPresupuestos();
@@ -1198,7 +1205,8 @@ document
     function exportarExcel() {
 
     window.location =
-        "/exportar-excel";
+        "/exportar-excel?token=" +
+        encodeURIComponent(token());
 
 }
 if ("serviceWorker" in navigator) {
@@ -1593,7 +1601,8 @@ async function guardarGasto() {
             method: "POST",
 
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                authorization: token()
             },
 
             body: JSON.stringify({
@@ -1604,16 +1613,18 @@ async function guardarGasto() {
 
                 concepto,
 
-                monto,
-
-                usuarioId: 1
+                monto
 
             })
 
         });
 
-    const datos =
-        await respuesta.json();
+    if (!respuesta.ok) {
+        alert(await respuesta.text() || "Error al guardar el gasto");
+        return;
+    }
+
+    const datos = await respuesta.json();
 
     alert(
         "Gasto guardado. ID: " +
@@ -1627,7 +1638,9 @@ async function guardarGasto() {
 async function cargarResumenGastos() {
 
     const respuesta =
-        await fetch("/gastos/resumen");
+        await fetch("/gastos/resumen", {
+            headers: { authorization: token() }
+        });
 
     const datos =
         await respuesta.json();
@@ -1645,7 +1658,9 @@ async function cargarResumenGastos() {
 async function cargarGastos() {
 
     const respuesta =
-        await fetch("/gastos");
+        await fetch("/gastos", {
+            headers: { authorization: token() }
+        });
 
     const gastos =
         await respuesta.json();
@@ -1684,7 +1699,8 @@ async function eliminarGasto(id) {
     }
 
     await fetch(`/gastos/${id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: { authorization: token() }
     });
 
     cargarGastos();
@@ -1696,7 +1712,9 @@ async function eliminarGasto(id) {
 async function cargarResumenMensual() {
 
     const gastosRespuesta =
-        await fetch("/gastos/resumen-mensual");
+        await fetch("/gastos/resumen-mensual", {
+            headers: { authorization: token() }
+        });
 
     const gastosDatos =
         await gastosRespuesta.json();
@@ -1712,7 +1730,10 @@ async function cargarResumenMensual() {
 
     const cobradoRespuesta =
         await fetch(
-            "/presupuestos/resumen-mensual"
+            "/presupuestos/resumen-mensual",
+            {
+                headers: { authorization: token() }
+            }
         );
 
     const cobradoDatos =
@@ -1736,7 +1757,7 @@ async function cargarResumenMensual() {
 function descargarBackup() {
 
     window.open(
-        "/backup",
+        "/backup?token=" + encodeURIComponent(token()),
         "_blank"
     );
 

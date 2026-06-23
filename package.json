@@ -4,16 +4,23 @@
   "private": true,
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "check": "node --check app.js && node --check routes/presupuestos.js && node --check routes/gastos.js && node --check routes/auth.js && node --check scripts/migrate-sqlite-to-postgres.js",
+    "migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.js",
+    "migrate:sqlite:dry": "node scripts/migrate-sqlite-to-postgres.js --dry-run"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
     "bcrypt": "latest",
+    "dotenv": "^17.4.2",
     "exceljs": "latest",
     "express": "latest",
     "jsonwebtoken": "latest",
     "multer": "latest",
     "pdfkit": "latest",
     "pg": "^8.22.0",
-    "sqlite3": "5.1.7"
+    "sqlite3": "latest"
   }
 }
