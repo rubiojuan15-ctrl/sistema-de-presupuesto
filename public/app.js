@@ -1783,9 +1783,9 @@ async function cargarResumenMensual() {
         gananciaMes.toLocaleString("es-AR");
 
 }
-function descargarBackup() {
+async function descargarBackup() {
 
-    probarCapacitor();
+    alert(window.Capacitor.getPlatform());
 
 }
 document
