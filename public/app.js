@@ -49,6 +49,7 @@ const promedio =
     document.getElementById("promedio");
 
 const cantidadPendientes = document.getElementById("cantidadPendientes");
+//import { Capacitor } from "@capacitor/core";
 
 function token() {
 
@@ -96,25 +97,40 @@ filtroVencimiento.addEventListener(
     "change",
     cargarPresupuestos
 );
+function limpiarFormulario() {
 
+    cliente.value = "";
+    telefono.value = "";
+    direccion.value = "";
+    trabajo.value = "";
+    observaciones.value = "";
+    fechaVencimiento.value = "";
+
+    materiales.value = "";
+    manoDeObra.value = "";
+    sena.value = "";
+
+    estado.value = "Pendiente";
+
+    imagen.value = "";
+
+    total.innerText = "Total: $0";
+    saldo.innerText = "Saldo: $0";
+
+    idEditando = null;
+
+}
 //guardar presupuestos
 async function guardarPresupuesto() {
     if (
-
-    cliente.value === "" ||
-
-    trabajo.value === "" ||
-
-    materiales.value === "" ||
-
-    manoDeObra.value === ""
-
-) {
-
-    alert("Completa todos los campos");
-
-    return;
-}
+        cliente.value === "" ||
+        trabajo.value === "" ||
+        materiales.value === "" ||
+        manoDeObra.value === ""
+    ) {
+            alert("Completa todos los campos");
+            return;
+        }
     const formData = new FormData();
 
         formData.append(
@@ -190,8 +206,9 @@ async function guardarPresupuesto() {
             file
         );
 
-}
-if (idEditando) {
+    }
+    if (idEditando) {
+        
 
     const respuesta = await fetch("/presupuestos/editar-presupuesto/" + idEditando, {
 
@@ -236,11 +253,11 @@ if (idEditando) {
             alert ("Error al editar")
             return;
         }
-
-    idEditando = null;
-
-}     
-else {
+        alert("Presupuesto actualizado");
+        idEditando = null;
+        limpiarFormulario();
+    }     
+    else {
 
         const respuesta = await fetch("/presupuestos/guardar-presupuesto", {
 
@@ -262,7 +279,7 @@ else {
         }
         alert("Presupuesto guardado");
     }
-
+    limpiarFormulario();
     cargarPresupuestos();
     cargarResumenGastos();
     cargarGastos();
@@ -297,15 +314,10 @@ async function cargarPresupuestos() {
     );
 
     if (!respuesta.ok) {
-
         if (respuesta.status === 401) {
-
             logout();
-
         }
-
         return;
-
     }
 
     const presupuestos = await respuesta.json();
@@ -1221,11 +1233,11 @@ document
     )
     function exportarExcel() {
 
-    window.location =
-        "/exportar-excel?token=" +
-        encodeURIComponent(token());
+        window.location =
+            "/exportar-excel?token=" +
+            encodeURIComponent(token());
 
-}
+    }
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker
         .getRegistrations()
