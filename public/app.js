@@ -1785,10 +1785,7 @@ async function cargarResumenMensual() {
 }
 function descargarBackup() {
 
-    window.open(
-        "/backup?token=" + encodeURIComponent(token()),
-        "_blank"
-    );
+    probarCapacitor();
 
 }
 document
@@ -1811,3 +1808,20 @@ document
         "change",
         cargarPresupuestos
     );
+async function probarCapacitor() {
+
+    alert(typeof window.Capacitor);
+
+    console.log(window.Capacitor);
+
+    if (window.Capacitor) {
+
+        alert("Capacitor OK");
+
+    } else {
+
+        alert("Capacitor NO");
+
+    }
+
+}
