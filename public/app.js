@@ -1783,15 +1783,20 @@ async function cargarResumenMensual() {
         gananciaMes.toLocaleString("es-AR");
 
 }
+function descargarBackup() {
+    window.open(
+        "/backup?token=" +
+        encodeURIComponent(token()),
+        "_blank"
+    );
+}
 async function descargarBackup() {
-
-    alert(typeof window.DownloadPlugin);
-
-    alert(typeof window.Capacitor);
 
     alert(
         JSON.stringify(
-            Object.keys(window.Capacitor || {})
+            Object.keys(
+                window.Capacitor.Plugins || {}
+            )
         )
     );
 
