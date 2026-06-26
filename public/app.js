@@ -1786,22 +1786,12 @@ async function cargarResumenMensual() {
 async function descargarBackup() {
 
     // APK Android
-    async function descargarBackup() {
-
-    const url =
-        "https://sistema-de-presupuesto.onrender.com/backup?token=" +
-        encodeURIComponent(token());
-
     if (window.Capacitor?.getPlatform() === "android") {
-
-        window.location.href = url;
+        alert("Función de descarga Android en desarrollo");
         return;
 
+        window.open(url, "_system");
     }
-
-    window.open(url, "_blank");
-}
-
     // Web y navegador
     else {
 
