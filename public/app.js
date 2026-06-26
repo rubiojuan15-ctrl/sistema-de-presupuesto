@@ -1785,18 +1785,11 @@ async function cargarResumenMensual() {
 }
 async function descargarBackup() {
 
-    // APK Android
-    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+    if (window.Capacitor?.getPlatform() === "android") {
 
-        // código del plugin Android
-        alert("Usando descarga Android");
+        // descarga usando el plugin Android
 
-        // DownloadPlugin.download(...)
-
-    }
-
-    // Web y navegador
-    else {
+    } else {
 
         window.open(
             "/backup?token=" +
