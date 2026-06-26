@@ -1789,9 +1789,8 @@ async function descargarBackup() {
     if (window.Capacitor?.getPlatform() === "android") {
         alert("Función de descarga Android en desarrollo");
         return;
-
-        window.open(url, "_system");
     }
+
     // Web y navegador
     else {
 
