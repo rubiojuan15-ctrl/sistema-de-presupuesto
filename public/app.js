@@ -1785,25 +1785,15 @@ async function cargarResumenMensual() {
 }
 async function descargarBackup() {
 
-    try {
+    alert(typeof window.DownloadPlugin);
 
-        await window.Capacitor.Plugins.DownloadPlugin.download({
+    alert(typeof window.Capacitor);
 
-            url: window.location.origin +
-                 "/backup?token=" + encodeURIComponent(token()),
-
-            filename: "backup.json"
-
-        });
-
-        alert("Descarga iniciada");
-
-    } catch (e) {
-
-        console.error(e);
-        alert("Error: " + JSON.stringify(e));
-
-    }
+    alert(
+        JSON.stringify(
+            Object.keys(window.Capacitor || {})
+        )
+    );
 
 }
 document
