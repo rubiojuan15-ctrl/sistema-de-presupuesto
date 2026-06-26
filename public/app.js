@@ -1783,22 +1783,28 @@ async function cargarResumenMensual() {
         gananciaMes.toLocaleString("es-AR");
 
 }
-function descargarBackup() {
-    window.open(
-        "/backup?token=" +
-        encodeURIComponent(token()),
-        "_blank"
-    );
-}
 async function descargarBackup() {
 
-    alert(
-        JSON.stringify(
-            Object.keys(
-                window.Capacitor.Plugins || {}
-            )
-        )
-    );
+    // APK Android
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+
+        // código del plugin Android
+        alert("Usando descarga Android");
+
+        // DownloadPlugin.download(...)
+
+    }
+
+    // Web y navegador
+    else {
+
+        window.open(
+            "/backup?token=" +
+            encodeURIComponent(token()),
+            "_blank"
+        );
+
+    }
 
 }
 document
