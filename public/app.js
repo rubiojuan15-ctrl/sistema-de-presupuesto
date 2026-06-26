@@ -1786,19 +1786,14 @@ async function cargarResumenMensual() {
 async function descargarBackup() {
 
     if (window.Capacitor?.getPlatform() === "android") {
-
-        // descarga usando el plugin Android
-
-    } else {
-
-        window.open(
-            "/backup?token=" +
-            encodeURIComponent(token()),
-            "_blank"
-        );
-
+        alert("Función de descarga Android en desarrollo");
+        return;
     }
 
+    window.open(
+        "/backup?token=" + encodeURIComponent(token()),
+        "_blank"
+    );
 }
 document
     .getElementById("busqueda")
