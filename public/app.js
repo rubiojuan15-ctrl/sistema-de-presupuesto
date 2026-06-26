@@ -1785,15 +1785,23 @@ async function cargarResumenMensual() {
 }
 async function descargarBackup() {
 
+    // APK Android
     if (window.Capacitor?.getPlatform() === "android") {
         alert("Función de descarga Android en desarrollo");
         return;
     }
 
-    window.open(
-        "/backup?token=" + encodeURIComponent(token()),
-        "_blank"
-    );
+    // Web y navegador
+    else {
+
+        window.open(
+            "/backup?token=" +
+            encodeURIComponent(token()),
+            "_blank"
+        );
+
+    }
+
 }
 document
     .getElementById("busqueda")
