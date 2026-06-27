@@ -1232,6 +1232,10 @@ document
         }
     )
     function exportarExcel() {
+         if (window.Capacitor?.getPlatform() === "android") {
+            alert("Función de descarga Android en desarrollo");
+            return;
+        }
 
         window.location =
             "/exportar-excel?token=" +
