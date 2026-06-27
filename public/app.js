@@ -49,7 +49,7 @@ const promedio =
     document.getElementById("promedio");
 
 const cantidadPendientes = document.getElementById("cantidadPendientes");
-import { Browser } from '@capacitor/browser';
+
 
 function token() {
 
@@ -1789,6 +1789,7 @@ async function cargarResumenMensual() {
         gananciaMes.toLocaleString("es-AR");
 
 }
+import { Browser } from '@capacitor/browser';
 async function descargarBackup() {
   const tokenStr = encodeURIComponent(token());
 
