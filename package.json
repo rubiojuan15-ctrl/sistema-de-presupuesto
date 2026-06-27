@@ -16,7 +16,6 @@
     "@capacitor/core": "^8.4.1",
     "@capacitor/file-transfer": "^2.0.4",
     "@capacitor/filesystem": "^8.1.2",
-    
     "@capacitor/share": "^8.0.1",
     "bcrypt": "latest",
     "dotenv": "^17.4.2",
