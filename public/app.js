@@ -1,3 +1,6 @@
+import { Browser } from '@capacitor/browser';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+
 const sistema = document.getElementById("sistema");
 const API ="";
 const busqueda = document.getElementById("busqueda");
@@ -1789,7 +1792,7 @@ async function cargarResumenMensual() {
         gananciaMes.toLocaleString("es-AR");
 
 }
-import { Browser } from '@capacitor/browser';
+
 async function descargarBackup() {
   const tokenStr = encodeURIComponent(token());
 
@@ -1840,21 +1843,19 @@ async function probarCapacitor() {
     }
 
 }
-import { Filesystem, Directory } from '@capacitor/filesystem';
-
 async function descargarArchivoInvisible() {
   // Asegúrate de usar la URL absoluta de tu API
   const url = "https://sistema-de-presupuesto.onrender.com//exportar-excel?token=" + encodeURIComponent(token());
 
   try {
-    // 1. Descargar el archivo a la memoria mediante fetch
-    const response = await fetch(url);
-    const blob = await response.blob();
+        // 1. Descargar el archivo a la memoria mediante fetch
+        const response = await fetch(url);
+        const blob = await response.blob();
 
-    // 2. Convertir el blob a formato Base64 (requerido por Filesystem)
-    const reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onloadend = async () => {
+        // 2. Convertir el blob a formato Base64 (requerido por Filesystem)
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = async () => {
       
       // Extraemos solo los datos Base64, quitando el prefijo (data:application/...;base64,)
       const base64Data = reader.result.split(',')[1];
@@ -1869,9 +1870,30 @@ async function descargarArchivoInvisible() {
 
       // Opcional: Avisar al usuario que terminó
       alert(`Descarga completa. Guardado en Documentos/${nombreArchivo}`);
-    };
-  } catch (error) {
-    console.error("Error al descargar en segundo plano:", error);
-    alert("Hubo un error al guardar el archivo.");
+        };
+  }
+    catch (error) {
+        console.error("Error al descargar en segundo plano:", error);
+        alert("Hubo un error al guardar el archivo.");
   }
 }
+// --- EXPORTAR FUNCIONES AL HTML ---
+// Esto permite que los onclick="" del HTML sigan funcionando como antes
+
+window.login = login;
+window.registrarse = registrarse;
+window.logout = logout;
+window.guardarPresupuesto = guardarPresupuesto;
+window.limpiarFormulario = limpiarFormulario;
+window.cambiarEstado = cambiarEstado;
+window.verDetalle = verDetalle;
+window.editarPresupuesto = editarPresupuesto;
+window.masAcciones = masAcciones;
+window.exportarExcel = exportarExcel;
+window.descargarBackup = descargarBackup;
+window.descargarArchivoInvisible = descargarArchivoInvisible;
+window.abrirImagen = abrirImagen;
+window.mostrarFormularioGasto = mostrarFormularioGasto;
+window.guardarGasto = guardarGasto;
+window.eliminarGasto = eliminarGasto;
+window.probarCapacitor = probarCapacitor;
