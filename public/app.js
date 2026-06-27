@@ -1236,7 +1236,7 @@ document
         
         if (window.Capacitor?.getPlatform() === "android") {
             // IMPORTANTE: En Android necesitas la URL completa (absoluta)
-            const urlAbsoluta = "https://https://sistema-de-presupuesto.onrender.com/exportar-excel?token=" + tokenStr;
+            const urlAbsoluta = "https://sistema-de-presupuesto.onrender.com/exportar-excel?token=" + tokenStr;
             await Browser.open({ url: urlAbsoluta });
             return;
         }
@@ -1794,7 +1794,7 @@ async function descargarBackup() {
 
   if (window.Capacitor?.getPlatform() === "android") {
     // Recuerda cambiar esto por tu dominio real
-    const urlAbsoluta = "https://https://sistema-de-presupuesto.onrender.com/backup?token=" + tokenStr;
+    const urlAbsoluta = "https://sistema-de-presupuesto.onrender.com/backup?token=" + tokenStr;
     await Browser.open({ url: urlAbsoluta });
     return;
   }
@@ -1838,4 +1838,39 @@ async function probarCapacitor() {
 
     }
 
+}
+import { Filesystem, Directory } from '@capacitor/filesystem';
+
+async function descargarArchivoInvisible() {
+  // Asegúrate de usar la URL absoluta de tu API
+  const url = "https://sistema-de-presupuesto.onrender.com//exportar-excel?token=" + encodeURIComponent(token());
+
+  try {
+    // 1. Descargar el archivo a la memoria mediante fetch
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    // 2. Convertir el blob a formato Base64 (requerido por Filesystem)
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = async () => {
+      
+      // Extraemos solo los datos Base64, quitando el prefijo (data:application/...;base64,)
+      const base64Data = reader.result.split(',')[1];
+      const nombreArchivo = `Archivo_${Date.now()}.xlsx`; // Cambia la extensión según necesites (.xlsx, .zip)
+
+      // 3. Escribir el archivo silenciosamente en el dispositivo
+      await Filesystem.writeFile({
+        path: nombreArchivo,
+        data: base64Data,
+        directory: Directory.Documents // Se guardará en la carpeta "Documentos" del teléfono
+      });
+
+      // Opcional: Avisar al usuario que terminó
+      alert(`Descarga completa. Guardado en Documentos/${nombreArchivo}`);
+    };
+  } catch (error) {
+    console.error("Error al descargar en segundo plano:", error);
+    alert("Hubo un error al guardar el archivo.");
+  }
 }
