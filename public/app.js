@@ -1236,7 +1236,7 @@ document
         
         if (window.Capacitor?.getPlatform() === "android") {
             // IMPORTANTE: En Android necesitas la URL completa (absoluta)
-            const urlAbsoluta = "https://TU_API.com/exportar-excel?token=" + tokenStr;
+            const urlAbsoluta = "https://https://sistema-de-presupuesto.onrender.com/exportar-excel?token=" + tokenStr;
             await Browser.open({ url: urlAbsoluta });
             return;
         }
@@ -1794,7 +1794,7 @@ async function descargarBackup() {
 
   if (window.Capacitor?.getPlatform() === "android") {
     // Recuerda cambiar esto por tu dominio real
-    const urlAbsoluta = "https://TU_API.com/backup?token=" + tokenStr;
+    const urlAbsoluta = "https://https://sistema-de-presupuesto.onrender.com/backup?token=" + tokenStr;
     await Browser.open({ url: urlAbsoluta });
     return;
   }
