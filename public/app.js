@@ -49,7 +49,7 @@ const promedio =
     document.getElementById("promedio");
 
 const cantidadPendientes = document.getElementById("cantidadPendientes");
-//import { Capacitor } from "@capacitor/core";
+import { Browser } from '@capacitor/browser';
 
 function token() {
 
@@ -1231,17 +1231,19 @@ document
 
         }
     )
-    function exportarExcel() {
-         if (window.Capacitor?.getPlatform() === "android") {
-            alert("Función de descarga Android en desarrollo");
+    async function exportarExcel() {
+        const tokenStr = encodeURIComponent(token());
+        
+        if (window.Capacitor?.getPlatform() === "android") {
+            // IMPORTANTE: En Android necesitas la URL completa (absoluta)
+            const urlAbsoluta = "https://TU_API.com/exportar-excel?token=" + tokenStr;
+            await Browser.open({ url: urlAbsoluta });
             return;
         }
 
-        window.location =
-            "/exportar-excel?token=" +
-            encodeURIComponent(token());
-
-    }
+        // Comportamiento normal para la Web
+        window.location = "/exportar-excel?token=" + tokenStr;
+}
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker
         .getRegistrations()
@@ -1788,24 +1790,17 @@ async function cargarResumenMensual() {
 
 }
 async function descargarBackup() {
+  const tokenStr = encodeURIComponent(token());
 
-    // APK Android
-    if (window.Capacitor?.getPlatform() === "android") {
-        alert("Función de descarga Android en desarrollo");
-        return;
-    }
+  if (window.Capacitor?.getPlatform() === "android") {
+    // Recuerda cambiar esto por tu dominio real
+    const urlAbsoluta = "https://TU_API.com/backup?token=" + tokenStr;
+    await Browser.open({ url: urlAbsoluta });
+    return;
+  }
 
-    // Web y navegador
-    else {
-
-        window.open(
-            "/backup?token=" +
-            encodeURIComponent(token()),
-            "_blank"
-        );
-
-    }
-
+  // Web y navegador
+  window.open("/backup?token=" + tokenStr, "_blank");
 }
 document
     .getElementById("busqueda")
