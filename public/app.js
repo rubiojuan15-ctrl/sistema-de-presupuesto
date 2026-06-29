@@ -1234,16 +1234,16 @@ document
         }
     )
     async function exportarExcel() {
-    const tokenStr = encodeURIComponent(token());
-    
-    if (window.Capacitor?.getPlatform() === "android") {
-        const urlAbsoluta = "https://sistema-de-presupuesto.onrender.com/exportar-excel?token=" + tokenStr;
-        await window.Capacitor.Plugins.Browser.open({ url: urlAbsoluta });
-        return;
-    }
 
-    // Comportamiento normal para la Web
-    window.location = "/exportar-excel?token=" + tokenStr;
+    const url =
+        "https://sistema-de-presupuesto.onrender.com/exportar-excel?token=" +
+        encodeURIComponent(token());
+
+    window.open(
+        url,
+        "_system"
+    );
+
 }
 
 if ("serviceWorker" in navigator) {
@@ -1791,25 +1791,16 @@ async function cargarResumenMensual() {
         gananciaMes.toLocaleString("es-AR");
 
 }
-
 async function descargarBackup() {
 
-    alert("Plataforma: " + window.Capacitor.getPlatform());
+    const url =
+        "https://sistema-de-presupuesto.onrender.com/backup?token=" +
+        encodeURIComponent(token());
 
-    alert(
-        "Filesystem disponible: " +
-        Capacitor.isPluginAvailable("Filesystem")
+    window.open(
+        url,
+        "_system"
     );
-
-    alert(
-        "Browser disponible: " +
-        Capacitor.isPluginAvailable("Browser")
-    );
-    alert(
-  JSON.stringify(
-    window.Capacitor.PluginHeaders.map(p => p.name)
-  )
-);
 
 }
 document
