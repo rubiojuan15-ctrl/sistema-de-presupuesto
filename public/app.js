@@ -1798,12 +1798,12 @@ async function descargarBackup() {
 
     alert(
         "Filesystem disponible: " +
-        !!window.Capacitor.Plugins.Filesystem
+        window.Capacitor.isPluginAvailable("Filesystem")
     );
 
     alert(
         "Browser disponible: " +
-        !!window.Capacitor.Plugins.Browser
+        window.Capacitor.isPluginAvailable("Browser")
     );
 
 }
