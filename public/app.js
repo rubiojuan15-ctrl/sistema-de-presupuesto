@@ -1794,15 +1794,14 @@ async function cargarResumenMensual() {
 async function descargarBackup() {
 
     const url =
-        "/backup?token=" +
+        "https://sistema-de-presupuesto.onrender.com/backup?token=" +
         encodeURIComponent(token());
 
     if (window.Capacitor?.getPlatform() === "android") {
-        alert("Descarga Android pendiente");
-        return;
+        window.location.href = url;
+    } else {
+        window.open(url, "_blank");
     }
-
-    window.open(url, "_blank");
 }
 document
     .getElementById("busqueda")
