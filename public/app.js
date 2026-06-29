@@ -1,5 +1,4 @@
-/*import { Browser } from '@capacitor/browser';*/
-/*import { Filesystem, Directory } from '@capacitor/filesystem';*/
+const Filesystem = window.Capacitor?.Plugins?.Filesystem;
 
 const sistema = document.getElementById("sistema");
 const API ="";
