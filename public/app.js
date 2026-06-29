@@ -1,4 +1,4 @@
-
+const Filesystem = window.Capacitor?.Plugins?.Filesystem;
 
 const sistema = document.getElementById("sistema");
 const API ="";
@@ -1798,13 +1798,14 @@ async function descargarBackup() {
 
     alert(
         "Filesystem disponible: " +
-        window.Capacitor.isPluginAvailable("Filesystem")
+        Capacitor.isPluginAvailable("Filesystem")
     );
 
     alert(
         "Browser disponible: " +
-        window.Capacitor.isPluginAvailable("Browser")
+        Capacitor.isPluginAvailable("Browser")
     );
+    alert(JSON.stringify(Object.keys(Capacitor)));
 
 }
 document
