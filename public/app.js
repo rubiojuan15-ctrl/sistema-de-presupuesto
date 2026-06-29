@@ -1805,7 +1805,11 @@ async function descargarBackup() {
         "Browser disponible: " +
         Capacitor.isPluginAvailable("Browser")
     );
-    alert(JSON.stringify(Object.keys(Capacitor)));
+    alert(
+  JSON.stringify(
+    window.Capacitor.PluginHeaders.map(p => p.name)
+  )
+);
 
 }
 document
