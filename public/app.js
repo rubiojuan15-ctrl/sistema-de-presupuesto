@@ -1,5 +1,5 @@
-/*import { Browser } from '@capacitor/browser';
-import { Filesystem, Directory } from '@capacitor/filesystem';*/
+/*import { Browser } from '@capacitor/browser';*/
+/*import { Filesystem, Directory } from '@capacitor/filesystem';*/
 
 const sistema = document.getElementById("sistema");
 const API ="";
@@ -1794,16 +1794,19 @@ async function cargarResumenMensual() {
 }
 
 async function descargarBackup() {
-  const tokenStr = encodeURIComponent(token());
 
-  if (window.Capacitor?.getPlatform() === "android") {
-    const urlAbsoluta = "https://sistema-de-presupuesto.onrender.com/backup?token=" + tokenStr;
-    await window.Capacitor.Plugins.Browser.open({ url: urlAbsoluta });
-    return;
-  }
+    alert("Plataforma: " + window.Capacitor.getPlatform());
 
-  // Web y navegador
-  window.open("/backup?token=" + tokenStr, "_blank");
+    alert(
+        "Filesystem disponible: " +
+        !!window.Capacitor.Plugins.Filesystem
+    );
+
+    alert(
+        "Browser disponible: " +
+        !!window.Capacitor.Plugins.Browser
+    );
+
 }
 document
     .getElementById("busqueda")
@@ -1843,6 +1846,7 @@ async function probarCapacitor() {
 
 }
 async function descargarArchivoInvisible() {
+    
   const url = "https://sistema-de-presupuesto.onrender.com/exportar-excel?token=" + encodeURIComponent(token());
 
   try {
