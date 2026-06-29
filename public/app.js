@@ -1797,11 +1797,8 @@ async function descargarBackup() {
         "https://sistema-de-presupuesto.onrender.com/backup?token=" +
         encodeURIComponent(token());
 
-    if (window.Capacitor?.getPlatform() === "android") {
-        window.location.href = url;
-    } else {
-        window.open(url, "_blank");
-    }
+    window.open(url, "_blank");
+
 }
 document
     .getElementById("busqueda")
