@@ -1,4 +1,4 @@
-const Filesystem = window.Capacitor?.Plugins?.Filesystem;
+
 
 const sistema = document.getElementById("sistema");
 const API ="";
