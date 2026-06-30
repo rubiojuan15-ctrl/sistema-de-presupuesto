@@ -1189,3 +1189,32 @@ td img:hover {
         transition: none !important;
     }
 }
+.brand-mark {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.brand-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.brand-mark {
+    width: 70px;
+    height: 70px;
+    background: #111;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.brand-mark img {
+    width: 55px;
+    height: 55px;
+}
