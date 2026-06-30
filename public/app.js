@@ -290,8 +290,7 @@ async function guardarPresupuesto() {
 
 //cargar presupuestos
 async function cargarPresupuestos() {
-    console.log("LISTA:", lista);
-alert("LISTA: " + lista);
+ 
 
     const respuesta = await fetch(API + "/presupuestos/obtener-presupuestos?busqueda=" +
 
