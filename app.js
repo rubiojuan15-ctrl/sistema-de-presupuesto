@@ -15,7 +15,12 @@ const gastosRoutes = require("./routes/gastos");
 
 const app = express();
 app.use(cors({
-    origin: true,
+    origin: [
+        "https://localhost",
+        "capacitor://localhost",
+        "http://localhost",
+        "https://sistema-de-presupuesto.onrender.com"
+    ],
     credentials: true
 }));
 const port = Number(process.env.PORT || 3000);
