@@ -1886,6 +1886,52 @@ if (window.Capacitor?.isNativePlatform?.()) {
     );
 
 }
+let inicioY = 0;
+
+document.addEventListener("touchstart", (e) => {
+    if (window.scrollY === 0) {
+        inicioY = e.touches[0].clientY;
+    }
+});
+
+document.addEventListener("touchend", (e) => {
+
+    const finY = e.changedTouches[0].clientY;
+
+    if (
+        window.scrollY === 0 &&
+        finY - inicioY > 120
+    ) {
+
+        mostrarNotificacion("Actualizando...");
+
+        cargarPresupuestos();
+        cargarGastos();
+        cargarResumenGastos();
+        cargarResumenMensual();
+
+    }
+
+});
+function toggleMenu() {
+
+    document
+        .getElementById(
+            "menuUsuario"
+        )
+        .classList.toggle(
+            "mostrar"
+        );
+
+}
+window.toggleMenu = toggleMenu;
+/*PullToRefresh.init({
+    mainElement: ".content-stack",
+
+    onRefresh() {
+        return cargarPresupuestos();
+    }
+});*/
 // --- EXPORTAR FUNCIONES AL HTML ---
 // Esto permite que los onclick="" del HTML sigan funcionando como antes
 

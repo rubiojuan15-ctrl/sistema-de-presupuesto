@@ -70,9 +70,17 @@
                         <h1>Sistema de Presupuestos</h1>
                     </div>
                 </div>
-                <button class="button button-ghost logout-button" type="button" onclick="logout()">
-                    Cerrar sesión
-                </button>
+               <div class="usuario-menu">
+                <img src="avatar.png" class="avatar" onclick="toggleMenu()">
+                <div id="menuUsuario" class="menu-usuario">
+                    <div class="menu-header">
+                        Hola, Juan
+                    </div>
+                    <button onclick="logout()">
+                        🚪 Cerrar sesión
+                    </button>
+                </div>
+            </div>
             </header>
 
             <div class="content-stack">
@@ -321,7 +329,7 @@
 
     <nav id="mobileBar" class="mobile-nav" aria-label="Navegación rápida">
         <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span>⌂</span>Inicio</button>
-        <button type="button" onclick="cargarPresupuestos()"><span>↻</span>Actualizar</button>
+        <button type="button" onclick="descargarBackup()"><span>↓</span>Respaldo</button>
         <button type="button" onclick="exportarExcel()"><span>↓</span>Excel</button>
     </nav>
 
