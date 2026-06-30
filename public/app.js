@@ -212,7 +212,7 @@ async function guardarPresupuesto() {
     if (idEditando) {
         
 
-    const respuesta = await fetch("/presupuestos/editar-presupuesto/" + idEditando, {
+    const respuesta = await fetch(API + "/presupuestos/editar-presupuesto/" + idEditando, {
 
         method: "PUT",
 
@@ -261,7 +261,7 @@ async function guardarPresupuesto() {
     }     
     else {
 
-        const respuesta = await fetch("/presupuestos/guardar-presupuesto", {
+        const respuesta = await fetch(API + "/presupuestos/guardar-presupuesto", {
 
             method: "POST",
              headers: {
@@ -478,7 +478,7 @@ document.getElementById("facturacionMes").textContent = "$" +
             "$" +
             porCobrar.toLocaleString("es-AR");
     
-    const resumenRespuesta = await fetch("/presupuestos/resumen",
+    const resumenRespuesta = await fetch(API + "/presupuestos/resumen",
         {
             headers: {
                 authorization: token()
@@ -519,7 +519,7 @@ document.getElementById("facturacionMes").textContent = "$" +
         ).textContent =
             resumen.vencidos;
         const gastosRespuesta =
-            await fetch("/gastos/resumen", {
+            await fetch(API + "/gastos/resumen", {
                 headers: { authorization: token() }
             });
 
@@ -772,7 +772,7 @@ crearGraficoMensual(
 //editar presupuestos
 async function editarPresupuesto(id) {
 
-    const respuesta = await fetch("/presupuestos/obtener-presupuestos?usuarioId=" +
+    const respuesta = await fetch(API + "/presupuestos/obtener-presupuestos?usuarioId=" +
             localStorage.getItem("usuarioId")
         ,
         {
@@ -843,7 +843,7 @@ async function registrarPago(id) {
 
     }
 
-    const respuesta = await fetch("/presupuestos/cobrar/" + id,
+    const respuesta = await fetch(API + "/presupuestos/cobrar/" + id,
 
         {
 
@@ -890,7 +890,7 @@ async function eliminarPresupuesto(id) {
     if (!confirm("Eliminar presupuesto?")) {
         return;
     }
-    await fetch("/presupuestos/eliminar-presupuesto/" + id, {
+    await fetch(API + "/presupuestos/eliminar-presupuesto/" + id, {
 
         method: "DELETE",
 
@@ -904,7 +904,7 @@ async function eliminarPresupuesto(id) {
 function descargarPDF(id) {
 
     window.open(
-        "/presupuestos/generar-pdf/" + id +
+    API + "/presupuestos/generar-pdf/" + id +
         "?token=" + encodeURIComponent(token()),
         "_blank"
     );
@@ -912,7 +912,7 @@ function descargarPDF(id) {
 }
 async function cambiarEstado(id, estado) {
 
-    await fetch("/presupuestos/cambiar-estado/" + id,
+    await fetch(API + "/presupuestos/cambiar-estado/" + id,
         {
 
             method: "PUT",
@@ -1367,7 +1367,7 @@ document
 
     async function enviarWhatsApp(id) {
         const respuesta =
-            await fetch("/presupuestos/obtener-presupuestos?usuarioId=" +
+            await fetch(API + "/presupuestos/obtener-presupuestos?usuarioId=" +
 
                 localStorage.getItem(
                     "usuarioId"
@@ -1480,7 +1480,7 @@ function mostrarNotificacion(texto) {
 }
 async function verHistorial(id) {
 
-    const respuesta = await fetch("/presupuestos/pagos/" + id,
+    const respuesta = await fetch(API + "/presupuestos/pagos/" + id,
 
         {
 
@@ -1533,8 +1533,7 @@ async function verHistorial(id) {
 }
 async function verDetalle(id) {
 
-    const respuesta = await fetch(
-        "/presupuestos/obtener-presupuestos?usuarioId=" +
+    const respuesta = await fetch(API + "/presupuestos/obtener-presupuestos?usuarioId=" +
         localStorage.getItem("usuarioId"),
         {
             headers: {
@@ -1633,7 +1632,7 @@ async function guardarGasto() {
             document.getElementById("montoGasto").value
         );
 
-    const respuesta = await fetch("/gastos", {
+    const respuesta = await fetch(API + "/gastos", {
 
             method: "POST",
 
@@ -1675,7 +1674,7 @@ async function guardarGasto() {
 async function cargarResumenGastos() {
 
     const respuesta =
-        await fetch("/gastos/resumen", {
+        await fetch(API + "/gastos/resumen", {
             headers: { authorization: token() }
         });
 
@@ -1735,7 +1734,7 @@ async function eliminarGasto(id) {
         return;
     }
 
-    await fetch(`/gastos/${id}`, {
+    await fetch(API + `/gastos/${id}`, {
         method: "DELETE",
         headers: { authorization: token() }
     });
@@ -1749,7 +1748,7 @@ async function eliminarGasto(id) {
 async function cargarResumenMensual() {
 
     const gastosRespuesta =
-        await fetch("/gastos/resumen-mensual", {
+        await fetch(API + "/gastos/resumen-mensual", {
             headers: { authorization: token() }
         });
 
@@ -1766,8 +1765,7 @@ async function cargarResumenMensual() {
         gastosMes.toLocaleString("es-AR");
 
     const cobradoRespuesta =
-        await fetch(
-            "/presupuestos/resumen-mensual",
+        await fetch(API +  "/presupuestos/resumen-mensual",
             {
                 headers: { authorization: token() }
             }
