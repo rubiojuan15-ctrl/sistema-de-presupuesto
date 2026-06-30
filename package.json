@@ -18,6 +18,7 @@
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/share": "^8.0.1",
     "bcrypt": "latest",
+    "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "exceljs": "latest",
     "express": "latest",
