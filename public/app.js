@@ -290,7 +290,6 @@ async function guardarPresupuesto() {
 
 //cargar presupuestos
 async function cargarPresupuestos() {
- 
 
     const respuesta = await fetch(API + "/presupuestos/obtener-presupuestos?busqueda=" +
 
@@ -1864,6 +1863,28 @@ async function descargarArchivoInvisible() {
         console.error("Error al descargar en segundo plano:", error);
         alert("Hubo un error al guardar el archivo.");
   }
+}
+if (window.Capacitor?.isNativePlatform?.()) {
+
+    window.Capacitor.Plugins.App.addListener(
+        "backButton",
+        ({ canGoBack }) => {
+
+            const salir = confirm(
+                "¿Desea cerrar sesión y salir de la aplicación?"
+            );
+
+            if (salir) {
+
+                logout();
+
+                window.Capacitor.Plugins.App.exitApp();
+
+            }
+
+        }
+    );
+
 }
 // --- EXPORTAR FUNCIONES AL HTML ---
 // Esto permite que los onclick="" del HTML sigan funcionando como antes
