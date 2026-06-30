@@ -1,7 +1,7 @@
 const Filesystem = window.Capacitor?.Plugins?.Filesystem;
 
 const sistema = document.getElementById("sistema");
-const API ="";
+const API = "https://sistema-de-presupuesto.onrender.com";
 const busqueda = document.getElementById("busqueda");
 const cliente = document.getElementById("cliente");
 const telefono = document.getElementById("telefono");
@@ -291,7 +291,7 @@ async function guardarPresupuesto() {
 //cargar presupuestos
 async function cargarPresupuestos() {
 
-    const respuesta = await fetch("/presupuestos/obtener-presupuestos?busqueda=" +
+    const respuesta = await fetch(API + "/presupuestos/obtener-presupuestos?busqueda=" +
 
         busqueda.value +
         
@@ -1695,7 +1695,7 @@ async function cargarResumenGastos() {
 async function cargarGastos() {
 
     const respuesta =
-        await fetch("/gastos", {
+        await fetch(API + "/gastos", {
             headers: { authorization: token() }
         });
 

@@ -3,7 +3,7 @@ const path = require("path");
 const express = require("express");
 const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
-
+const cors = require("cors");
 require("dotenv").config();
 
 const pool = require("./database/postgres");
@@ -14,6 +14,10 @@ const { router: presupuestosRoutes, presupuestoColumns } = require("./routes/pre
 const gastosRoutes = require("./routes/gastos");
 
 const app = express();
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 const port = Number(process.env.PORT || 3000);
 
 process.chdir(__dirname);
