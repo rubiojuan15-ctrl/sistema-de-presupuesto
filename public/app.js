@@ -1086,7 +1086,7 @@ async function login() {
     if (respuesta.ok) {
         const datos = await respuesta.json();
 
-        alert("Bienvenido");
+        /*alert("Bienvenido");*/
         localStorage.setItem(
             "logueado",
             "si"
@@ -1196,7 +1196,7 @@ if (
 }
 function logout() {
 
-    alert("LOGOUT EJECUTADO");
+    /*alert("LOGOUT EJECUTADO");*/
 
     localStorage.removeItem("logueado");
 
