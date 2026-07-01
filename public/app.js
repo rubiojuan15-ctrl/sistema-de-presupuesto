@@ -1,4 +1,4 @@
-const Filesystem = window.Capacitor?.Plugins?.Filesystem;
+﻿const Filesystem = window.Capacitor?.Plugins?.Filesystem;
 
 const sistema = document.getElementById("sistema");
 const API = "https://sistema-de-presupuesto.onrender.com";
@@ -42,6 +42,8 @@ let salirAplicacion = false;
 let idEditando = null;
 let grafico = null;
 let graficoMensual = null;
+let idCobroActual = null;
+let resolverConfirmacion = null;
 
 const totalFacturado =
     document.getElementById("totalFacturado");
@@ -60,6 +62,64 @@ function token() {
     return localStorage.getItem("token") || "";
 
 }
+
+const consultaTemaSistema = window.matchMedia("(prefers-color-scheme: dark)");
+
+function temaDelSistema() {
+    return consultaTemaSistema.matches ? "dark" : "light";
+}
+
+function aplicarTema(tema) {
+    document.documentElement.dataset.theme = tema;
+
+    const icono = document.getElementById("themeIcon");
+
+    if (icono) {
+        icono.textContent = "Auto";
+        icono.title = tema === "dark"
+            ? "Modo oscuro automatico"
+            : "Modo claro automatico";
+    }
+}
+
+function toggleTema() {
+    sincronizarTemaSistema();
+    mostrarNotificacion("Tema automatico segun el sistema");
+}
+
+function sincronizarTemaSistema() {
+    const temaAnterior = document.documentElement.dataset.theme;
+    const temaActual = temaDelSistema();
+
+    aplicarTema(temaActual);
+
+    if (temaAnterior && temaAnterior !== temaActual) {
+        actualizarGraficosTema();
+    }
+}
+
+if (consultaTemaSistema.addEventListener) {
+    consultaTemaSistema.addEventListener("change", sincronizarTemaSistema);
+} else if (consultaTemaSistema.addListener) {
+    consultaTemaSistema.addListener(sincronizarTemaSistema);
+}
+function actualizarMenuUsuario() {
+    const nombre = localStorage.getItem("usuario") || "Usuario";
+    const emailUsuario = localStorage.getItem("email") || "Sin email cargado";
+    const nombreElemento = document.getElementById("menuUsuarioNombre");
+    const emailElemento = document.getElementById("menuUsuarioEmail");
+
+    if (nombreElemento) {
+        nombreElemento.textContent = "Hola, " + nombre;
+    }
+
+    if (emailElemento) {
+        emailElemento.textContent = emailUsuario;
+    }
+}
+
+localStorage.removeItem("tema");
+sincronizarTemaSistema();
 function calcularTotal() {
 
     let resultado =
@@ -537,7 +597,22 @@ document.getElementById("facturacionMes").textContent = "$" +
             "gananciaReal"
         ).textContent =
             "$" +
-            ganancia.toLocaleString("es-AR");   
+            ganancia.toLocaleString("es-AR");
+
+        const totalPresupuestado = Number(resumen.totalPresupuestado || 0);
+        const totalCobrado = Number(resumen.totalCobrado || 0);
+        const tasaCobro = totalPresupuestado > 0
+            ? (totalCobrado / totalPresupuestado) * 100
+            : 0;
+        const margenNeto = totalCobrado > 0
+            ? (ganancia / totalCobrado) * 100
+            : 0;
+
+        document.getElementById("tasaCobro").textContent =
+            tasaCobro.toFixed(0) + "%";
+
+        document.getElementById("margenNeto").textContent =
+            margenNeto.toFixed(0) + "%";
     const fechaHoy = new Date()
         .toISOString()
         .split("T")[0];
@@ -563,7 +638,7 @@ document.getElementById("facturacionMes").textContent = "$" +
 
         alertas.innerHTML += `
             <div class="alerta">
-                ⚠️ Vence hoy:
+                âš ï¸ Vence hoy:
                 ${p.cliente}
             </div>
         `;
@@ -582,7 +657,7 @@ document.getElementById("facturacionMes").textContent = "$" +
                 alerta
                 alerta-atrasada
             ">
-                🚨 Atrasado:
+                ðŸš¨ Atrasado:
                 ${p.cliente}
             </div>
         `;
@@ -662,7 +737,7 @@ document.getElementById("facturacionMes").textContent = "$" +
                 $${Number(p.total).toLocaleString("es-AR")}
             </td>
 
-            <td data-label="Seña">
+            <td data-label="SeÃ±a">
                 $${Number(p.sena || 0).toLocaleString("es-AR")}
             </td>
 
@@ -712,12 +787,12 @@ document.getElementById("facturacionMes").textContent = "$" +
                     </option>
 
                     <option
-                        value="Seña"
-                        ${p.estado === "Seña"
+                        value="SeÃ±a"
+                        ${p.estado === "SeÃ±a"
                             ? "selected"
                             : ""}
                     >
-                        Seña
+                        SeÃ±a
                     </option>
 
                     <option
@@ -742,18 +817,16 @@ document.getElementById("facturacionMes").textContent = "$" +
 
             </td>
 
-            <td data-label="Acciones">
-
-                <button onclick="verDetalle(${p.id})">
-                    👁
+            <td data-label="Acciones">                <button class="btn-accion-tabla" type="button" title="Ver detalle" aria-label="Ver detalle" onclick="verDetalle(${p.id})">
+                    &#128065;
                 </button>
 
-                <button onclick="editarPresupuesto(${p.id})">
-                    ✏️
+                <button class="btn-accion-tabla" type="button" title="Editar" aria-label="Editar" onclick="editarPresupuesto(${p.id})">
+                    &#9999;&#65039;
                 </button>
 
-                <button onclick="masAcciones(${p.id})">
-                    ⚙️
+                <button class="btn-accion-tabla" type="button" title="Mas acciones" aria-label="Mas acciones" onclick="masAcciones(${p.id})">
+                    &#9881;&#65039;
                 </button>
 
             </td>
@@ -791,7 +864,7 @@ async function editarPresupuesto(id) {
 
     if (!presupuesto) {
 
-        alert("No se encontró presupuesto");
+        alert("No se encontrÃ³ presupuesto");
 
         return;
 
@@ -835,19 +908,49 @@ async function registrarPago(id) {
 
     cerrarModalAcciones();
 
-      const monto = Number(
-        prompt("Ingrese monto cobrado:")
-    );
+    idCobroActual = id;
+
+    const input = document.getElementById("montoCobro");
+    const error = document.getElementById("errorCobro");
+
+    if (input) {
+        input.value = "";
+    }
+
+    if (error) {
+        error.textContent = "";
+    }
+
+    document
+        .getElementById("modalCobro")
+        .classList.add("mostrar");
+
+    setTimeout(() => input?.focus(), 50);
+
+}
+
+async function confirmarCobro() {
+
+    const input = document.getElementById("montoCobro");
+    const error = document.getElementById("errorCobro");
+    const monto = Number(input?.value || 0);
 
     if (isNaN(monto) || monto <= 0) {
 
-        alert("Monto inválido");
+        if (error) {
+            error.textContent = "Ingresa un monto valido.";
+        }
 
         return;
 
     }
 
-    const respuesta = await fetch(API + "/presupuestos/cobrar/" + id,
+    if (!idCobroActual) {
+        cerrarModalCobro();
+        return;
+    }
+
+    const respuesta = await fetch(API + "/presupuestos/cobrar/" + idCobroActual,
 
         {
 
@@ -880,9 +983,9 @@ async function registrarPago(id) {
         return;
 
     }
-    
 
     alert("Pago registrado");
+    cerrarModalCobro();
     cargarResumenGastos();
     cargarPresupuestos();
     cargarGastos();
@@ -890,11 +993,23 @@ async function registrarPago(id) {
 
 }
 
+function cerrarModalCobro() {
+    idCobroActual = null;
+    document
+        .getElementById("modalCobro")
+        .classList.remove("mostrar");
+}
 async function eliminarPresupuesto(id) {
 
     cerrarModalAcciones();
 
-    if (!confirm("Eliminar presupuesto?")) {
+    const confirmado = await pedirConfirmacion({
+        titulo: "Eliminar presupuesto",
+        texto: "Esta accion elimina el presupuesto y no se puede deshacer.",
+        aceptar: "Eliminar"
+    });
+
+    if (!confirmado) {
         return;
     }
     await fetch(API + "/presupuestos/eliminar-presupuesto/" + id, {
@@ -943,6 +1058,30 @@ async function cambiarEstado(id, estado) {
     cargarPresupuestos();
 
 }
+function obtenerColorCss(variable) {
+    return getComputedStyle(document.documentElement)
+        .getPropertyValue(variable)
+        .trim();
+}
+
+function formatoMoneda(valor) {
+    return "$" + Number(valor || 0).toLocaleString("es-AR");
+}
+
+function opcionesGraficos() {
+    const colorTexto = obtenerColorCss("--ink");
+    const colorSuave = obtenerColorCss("--ink-soft");
+    const colorLinea = obtenerColorCss("--line");
+
+    return { colorTexto, colorSuave, colorLinea };
+}
+
+function actualizarGraficosTema() {
+    if (grafico || graficoMensual) {
+        cargarPresupuestos();
+    }
+}
+
 function crearGrafico(presupuestos) {
 
     const canvas =
@@ -951,25 +1090,28 @@ function crearGrafico(presupuestos) {
     const ctx =
         canvas.getContext("2d");
 
-    const cobrados =
-        presupuestos
-            .filter(
-                p => p.estado === "Cobrado total" || p.estado === "Cobrado"
-            )
-            .reduce(
-                (acc, p) => acc + p.total,
-                0
-            );
+    const estados = [
+        "Pendiente",
+        "En proceso",
+        "Entregado",
+        "Seña",
+        "Saldo pendiente",
+        "Cobrado total"
+    ];
 
-    const pendientes =
-        presupuestos
-            .filter(
-                p => p.estado === "Pendiente"
-            )
-            .reduce(
-                (acc, p) => acc + p.total,
-                0
-            );
+    const valores = estados.map(estadoNombre => {
+        return presupuestos
+            .filter(p => {
+                if (estadoNombre === "Cobrado total") {
+                    return p.estado === "Cobrado total" || p.estado === "Cobrado";
+                }
+
+                return p.estado === estadoNombre;
+            })
+            .reduce((acc, p) => acc + Number(p.total || 0), 0);
+    });
+
+    const { colorTexto, colorSuave } = opcionesGraficos();
 
     if (grafico) {
 
@@ -983,20 +1125,53 @@ function crearGrafico(presupuestos) {
 
         data: {
 
-            labels: [
-                "Cobrado total",
-                "Pendientes"
-            ],
+            labels: estados,
 
             datasets: [{
 
-                data: [
-                    cobrados,
-                    pendientes
-                ]
+                data: valores,
+                backgroundColor: [
+                    "#d99a35",
+                    "#4f83cc",
+                    "#7a6fd6",
+                    "#d47a4a",
+                    "#b95050",
+                    "#3f9f6b"
+                ],
+                borderColor: obtenerColorCss("--paper"),
+                borderWidth: 3,
+                hoverOffset: 8
 
             }]
 
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "62%",
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        color: colorTexto,
+                        boxWidth: 12,
+                        padding: 16,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            return context.label + ": " + formatoMoneda(context.raw);
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 650,
+                easing: "easeOutQuart"
+            }
         }
 
     });
@@ -1009,8 +1184,12 @@ function crearGraficoMensual(presupuestos) {
 
     presupuestos.forEach(p => {
 
+        if (!p.fecha) return;
+
         const partes =
             p.fecha.split("/");
+
+        if (partes.length < 3) return;
 
         const mes =
             partes[1] + "/" + partes[2];
@@ -1021,7 +1200,7 @@ function crearGraficoMensual(presupuestos) {
 
         }
 
-        meses[mes] += p.total;
+        meses[mes] += Number(p.total || 0);
 
     });
 
@@ -1039,6 +1218,8 @@ function crearGraficoMensual(presupuestos) {
     const ctx =
         canvas.getContext("2d");
 
+    const { colorTexto, colorSuave, colorLinea } = opcionesGraficos();
+
     if (graficoMensual) {
 
         graficoMensual.destroy();
@@ -1055,12 +1236,54 @@ function crearGraficoMensual(presupuestos) {
 
             datasets: [{
 
-                label: "Facturación mensual",
+                label: "Facturacion mensual",
 
-                data: datos
+                data: datos,
+                backgroundColor: "rgba(63, 159, 107, .72)",
+                borderColor: "#3f9f6b",
+                borderWidth: 2,
+                borderRadius: 10,
+                maxBarThickness: 52
 
             }]
 
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            return formatoMoneda(context.raw);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: colorSuave },
+                    grid: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: colorSuave,
+                        callback(value) {
+                            return formatoMoneda(value);
+                        }
+                    },
+                    grid: { color: colorLinea }
+                }
+            },
+            animation: {
+                duration: 650,
+                easing: "easeOutQuart"
+            }
         }
 
     });
@@ -1108,9 +1331,13 @@ async function login() {
             "usuarioId",
             datos.id
         );
+        if (datos.usuario) {
+            localStorage.setItem("usuario", datos.usuario);
+        }
         if (datos.email) {
             localStorage.setItem("email", datos.email);
         }
+        actualizarMenuUsuario();
         document
         .getElementById("login")
         .style.display = "none";
@@ -1140,12 +1367,12 @@ async function registrarse() {
     }
 
     if (passwordVal.length < 6) {
-        alert("La contraseña debe tener al menos 6 caracteres");
+        alert("La contraseÃ±a debe tener al menos 6 caracteres");
         return;
     }
 
     if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
-        alert("Ingresá un email válido");
+        alert("IngresÃ¡ un email vÃ¡lido");
         return;
     }
 
@@ -1165,7 +1392,7 @@ async function registrarse() {
         const mensaje = await respuesta.text();
 
         if (respuesta.ok) {
-            alert("Usuario creado. Ahora podés iniciar sesión.");
+            alert("Usuario creado. Ahora podÃ©s iniciar sesiÃ³n.");
             return;
         }
 
@@ -1188,6 +1415,7 @@ if (
         .getElementById("sistema")
         .style.display = "block";
 
+    actualizarMenuUsuario();
     cargarPresupuestos();
     cargarResumenGastos();
     cargarGastos();
@@ -1406,7 +1634,7 @@ document
 
         if (!p) {
 
-            alert("No se encontró presupuesto");
+            alert("No se encontrÃ³ presupuesto");
 
             return;
 
@@ -1427,7 +1655,7 @@ document
 
     `Hola ${p.cliente},
 
-    Te envío tu presupuesto.
+    Te envÃ­o tu presupuesto.
 
     Telefono:
     ${p.telefono || "-"}
@@ -1579,6 +1807,7 @@ ${p.fecha || "-"}`
 
 }   
 function masAcciones(id) {
+    accionIdActual = id;
     window.accionIdActual = id;
     document
         .getElementById(
@@ -1694,7 +1923,7 @@ async function cargarGastos() {
                 <td>$${Number(gasto.monto).toLocaleString("es-AR")}</td>
                 <td>
                     <button onclick="eliminarGasto(${gasto.id})">
-                        🗑
+                         ❌
                     </button>
                 </td>
             </tr>
@@ -1705,7 +1934,13 @@ async function cargarGastos() {
 }
 async function eliminarGasto(id) {
 
-    if (!confirm("¿Eliminar gasto?")) {
+    const confirmado = await pedirConfirmacion({
+        titulo: "Eliminar gasto",
+        texto: "Esta accion elimina el gasto registrado.",
+        aceptar: "Eliminar"
+    });
+
+    if (!confirmado) {
         return;
     }
 
@@ -1719,6 +1954,29 @@ async function eliminarGasto(id) {
     cargarPresupuestos();
     cargarResumenMensual();
 
+}
+
+function pedirConfirmacion({ titulo, texto, aceptar }) {
+    const modal = document.getElementById("modalConfirmacion");
+    document.getElementById("modalConfirmacionTitulo").textContent = titulo;
+    document.getElementById("modalConfirmacionTexto").textContent = texto;
+    document.getElementById("modalConfirmacionAceptar").textContent = aceptar;
+    modal.classList.add("mostrar");
+
+    return new Promise(resolve => {
+        resolverConfirmacion = resolve;
+    });
+}
+
+function cerrarModalConfirmacion(confirmado) {
+    document
+        .getElementById("modalConfirmacion")
+        .classList.remove("mostrar");
+
+    if (resolverConfirmacion) {
+        resolverConfirmacion(Boolean(confirmado));
+        resolverConfirmacion = null;
+    }
 }
 async function cargarResumenMensual() {
 
@@ -1844,15 +2102,22 @@ window.salirAplicacion = false;
 if (window.Capacitor?.isNativePlatform?.()) {
 
     window.Capacitor.Plugins.App.addListener(
-        "backButton",
-        () => {
+    "backButton",
+    () => {
 
-            salirAplicacion = true;
-
-            logout();
-
+        if (
+            localStorage.getItem("logueado") !== "si"
+        ) {
+            window.Capacitor?.Plugins?.App?.exitApp();
+            return;
         }
-    );
+
+        salirAplicacion = true;
+
+        logout();
+
+    }
+);
 
 }
 let inicioY = 0;
@@ -1910,6 +2175,7 @@ function confirmarLogout() {
     localStorage.removeItem("logueado");
     localStorage.removeItem("token");
     localStorage.removeItem("usuarioId");
+    localStorage.removeItem("usuario");
     localStorage.removeItem("email");
 
     if (salirAplicacion) {
@@ -1959,9 +2225,13 @@ window.guardarGasto = guardarGasto;
 window.eliminarGasto = eliminarGasto;
 window.probarCapacitor = probarCapacitor;
 window.toggleMenu = toggleMenu;
+window.toggleTema = toggleTema;
 window.cerrarModalLogout = cerrarModalLogout;
 window.confirmarLogout = confirmarLogout;
 window.registrarPago = registrarPago;
+window.confirmarCobro = confirmarCobro;
+window.cerrarModalCobro = cerrarModalCobro;
+window.cerrarModalConfirmacion = cerrarModalConfirmacion;
 window.verHistorial = verHistorial;
 window.descargarPDF = descargarPDF;
 window.enviarWhatsApp = enviarWhatsApp;

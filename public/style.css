@@ -1,4 +1,5 @@
-:root {
+﻿:root {
+    color-scheme: light;
     --ink: #17221d;
     --ink-soft: #526159;
     --paper: #ffffff;
@@ -19,6 +20,27 @@
     --radius-sm: 12px;
     --radius: 20px;
     --radius-lg: 30px;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #edf4ef;
+    --ink-soft: #aebdb4;
+    --paper: #14201a;
+    --canvas: #09110d;
+    --canvas-deep: #0f1914;
+    --line: #26352d;
+    --brand: #d19162;
+    --brand-dark: #f0b07f;
+    --brand-soft: #37271d;
+    --green: #63c08d;
+    --green-soft: #173226;
+    --amber: #e3a73d;
+    --amber-soft: #352812;
+    --red: #ee7a72;
+    --red-soft: #3a1f1f;
+    --shadow-sm: 0 8px 26px rgba(0, 0, 0, .28);
+    --shadow-lg: 0 24px 80px rgba(0, 0, 0, .45);
 }
 
 * {
@@ -189,6 +211,11 @@ textarea::placeholder {
     color: #929991;
 }
 
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+    color: #78877e;
+}
+
 input:hover,
 select:hover,
 textarea:hover {
@@ -243,6 +270,11 @@ textarea {
 .button-secondary:hover,
 .button-ghost:hover {
     background: #f7f5ef;
+}
+
+:root[data-theme="dark"] .button-secondary:hover,
+:root[data-theme="dark"] .button-ghost:hover {
+    background: #1d2d25;
 }
 
 .button-ghost {
@@ -347,6 +379,12 @@ html.capacitor .install-note {
     backdrop-filter: blur(18px);
 }
 
+:root[data-theme="dark"] .login-card,
+:root[data-theme="dark"] .topbar {
+    background: rgba(20, 32, 26, .92);
+    border-color: rgba(70, 92, 78, .6);
+}
+
 .brand {
     display: flex;
     align-items: center;
@@ -410,6 +448,10 @@ html.capacitor .install-note {
     font-size: 12px;
     font-weight: 700;
     white-space: nowrap;
+}
+
+:root[data-theme="dark"] .section-badge {
+    background: #1d2d25;
 }
 
 .filters-grid {
@@ -484,6 +526,14 @@ html.capacitor .install-note {
     cursor: pointer;
 }
 
+:root[data-theme="dark"] .file-input::file-selector-button,
+:root[data-theme="dark"] td button,
+:root[data-theme="dark"] .acciones button {
+    color: var(--ink);
+    background: #1d2d25;
+    border-color: var(--line);
+}
+
 .totals-strip {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -515,7 +565,15 @@ html.capacitor .install-note {
     margin: 0;
     font-size: clamp(22px, 4vw, 34px);
 }
-
+:root[data-theme="dark"] .totals-strip > div {
+    background: var(--canvas-deep);
+}
+:root[data-theme="dark"] .totals-strip > div {
+    background: #132019;
+}
+:root[data-theme="dark"] .totals-strip span {
+    color: rgba(255,255,255,.65);
+}
 .primary-actions {
     justify-content: flex-end;
     margin-top: 18px;
@@ -733,12 +791,20 @@ th {
     text-transform: uppercase;
 }
 
+:root[data-theme="dark"] th {
+    background: #1a2a22;
+}
+
 tbody tr:last-child td {
     border-bottom: 0;
 }
 
 tbody tr:hover {
     background: #fbfaf6;
+}
+
+:root[data-theme="dark"] tbody tr:hover {
+    background: #18261f;
 }
 
 td[data-label="Trabajo"],
@@ -864,6 +930,11 @@ td img:hover {
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-lg);
     font-weight: 700;
+}
+
+:root[data-theme="dark"] #notificacion,
+:root[data-theme="dark"] .mobile-nav {
+    background: rgba(9, 17, 13, .96);
 }
 
 .mobile-nav {
@@ -1098,7 +1169,13 @@ td img:hover {
 
     td[data-label="Acciones"] button {
         flex: 0 0 42px;
+        width: 42px;
+        min-width: 42px;
+        height: 40px;
         margin: 0;
+        padding: 0;
+        white-space: nowrap;
+        overflow: hidden;
     }
 
     .mobile-nav {
@@ -1197,21 +1274,13 @@ td img:hover {
     display: flex;
     justify-content: center;
     align-items: center;
+    background: #111;
 }
 
 .brand-mark img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-}
-.brand-mark {
-    width: 70px;
-    height: 70px;
-    background: #111;
-    border-radius: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 .bottom-nav span {
     font-size: 11px;
@@ -1230,6 +1299,22 @@ td img:hover {
 }
 .usuario-menu {
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.theme-toggle {
+    min-width: 76px;
+    min-height: 40px;
+    padding: 8px 12px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    box-shadow: var(--shadow-sm);
 }
 
 .avatar {
@@ -1247,7 +1332,7 @@ td img:hover {
 
     width: 220px;
 
-    background: white;
+    background: var(--paper);
 
     border-radius: 12px;
 
@@ -1270,13 +1355,27 @@ td img:hover {
 .menu-header {
     padding: 16px;
     font-weight: bold;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--line);
+}
+
+.menu-header strong,
+.menu-header small {
+    display: block;
+}
+
+.menu-header small {
+    margin-top: 4px;
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
 }
 
 .menu-usuario button {
     width: 100%;
     border: none;
     background: none;
+    color: var(--ink);
     padding: 16px;
     text-align: left;
     cursor: pointer;
@@ -1306,7 +1405,8 @@ td img:hover {
 
 .modal-logout-contenido {
 
-    background: white;
+    background: var(--paper);
+    color: var(--ink);
 
     width: 90%;
     max-width: 450px;
@@ -1324,6 +1424,26 @@ td img:hover {
             0,
             .2
         );
+}
+
+.modal-formulario {
+    text-align: left;
+}
+
+.modal-copy {
+    margin: -24px 0 24px;
+    color: var(--ink-soft);
+}
+
+.modal-formulario .money-field {
+    margin-top: 8px;
+}
+
+.modal-error {
+    min-height: 20px;
+    margin: 10px 0 18px;
+    color: var(--red);
+    font-weight: 800;
 }
 
 .modal-logout-contenido h2 {
@@ -1359,13 +1479,18 @@ td img:hover {
 
 .btn-volver {
 
-    background: #f2f2f2;
+    background: var(--canvas-deep);
+    color: var(--ink);
 }
 
 .btn-salir {
 
-    background: #243b87;
+    background: var(--brand);
     color: white;
+}
+
+.btn-danger {
+    background: var(--red);
 }
 .acciones-menu {
     display: flex;
@@ -1381,9 +1506,9 @@ td img:hover {
     cursor: pointer;
 }
 .accion-eliminar {
-    background: #fff1f1;
-    color: #d32f2f;
-    border: 1px solid #ffd6d6;
+    background: var(--red-soft);
+    color: var(--red);
+    border: 1px solid rgba(180, 68, 63, .25);
 }
 .acciones-menu button {
     transition: all 0.15s ease;
@@ -1391,4 +1516,17 @@ td img:hover {
 
 .acciones-menu button:active {
     transform: scale(0.97);
+}
+
+.btn-accion-tabla {
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 40px;
+    min-width: 42px;
+    min-height: 40px;
+    padding: 0;
+    white-space: nowrap;
+    line-height: 1;
+    font-size: 18px;
 }
