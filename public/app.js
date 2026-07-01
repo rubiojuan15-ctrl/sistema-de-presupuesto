@@ -833,6 +833,8 @@ async function editarPresupuesto(id) {
 }
 async function registrarPago(id) {
 
+    cerrarModalAcciones();
+
       const monto = Number(
         prompt("Ingrese monto cobrado:")
     );
@@ -889,6 +891,9 @@ async function registrarPago(id) {
 }
 
 async function eliminarPresupuesto(id) {
+
+    cerrarModalAcciones();
+
     if (!confirm("Eliminar presupuesto?")) {
         return;
     }
@@ -904,6 +909,8 @@ async function eliminarPresupuesto(id) {
     cargarPresupuestos();
 }
 function descargarPDF(id) {
+
+    cerrarModalAcciones();
 
     window.open(
     API + "/presupuestos/generar-pdf/" + id +
@@ -1364,6 +1371,9 @@ document
     }
 
     async function enviarWhatsApp(id) {
+
+        cerrarModalAcciones();
+
         const respuesta =
             await fetch(API + "/presupuestos/obtener-presupuestos?usuarioId=" +
 
@@ -1478,6 +1488,8 @@ function mostrarNotificacion(texto) {
 }
 async function verHistorial(id) {
 
+    cerrarModalAcciones();
+
     const respuesta = await fetch(API + "/presupuestos/pagos/" + id,
 
         {
@@ -1567,9 +1579,7 @@ ${p.fecha || "-"}`
 
 }   
 function masAcciones(id) {
-
-    accionIdActual = id;
-
+    window.accionIdActual = id;
     document
         .getElementById(
             "modalAcciones"
@@ -1579,17 +1589,7 @@ function masAcciones(id) {
         );
 
 }
-function cerrarModalAcciones() {
 
-    document
-        .getElementById(
-            "modalAcciones"
-        )
-        .classList.remove(
-            "mostrar"
-        );
-
-}
 function mostrarFormularioGasto() {
 
     document
@@ -1923,6 +1923,13 @@ function confirmarLogout() {
 
     location.reload();
 
+}
+function cerrarModalAcciones() {
+    const modal = document.getElementById("modalAcciones");
+
+    if (modal) {
+        modal.classList.remove("mostrar");
+    }
 }
 /*PullToRefresh.init({
     mainElement: ".content-stack",
