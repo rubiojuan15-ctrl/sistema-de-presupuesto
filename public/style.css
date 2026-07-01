@@ -1367,3 +1367,20 @@ td img:hover {
     background: #243b87;
     color: white;
 }
+.acciones-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.acciones-menu button {
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.accion-eliminar {
+    color: red;
+}

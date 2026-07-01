@@ -373,6 +373,44 @@
     </div>
 
 </div>
+<div id="modalAcciones" class="modal-logout">
+
+    <div class="modal-logout-contenido">
+
+        <h2>Acciones</h2>
+
+        <div class="acciones-menu">
+
+            <button onclick="registrarPago(accionIdActual)">
+                💰 Cobrar
+            </button>
+
+            <button onclick="verHistorial(accionIdActual)">
+                📜 Historial
+            </button>
+
+            <button onclick="descargarPDF(accionIdActual)">
+                📄 PDF
+            </button>
+
+            <button onclick="enviarWhatsApp(accionIdActual)">
+                📱 WhatsApp
+            </button>
+
+            <button class="accion-eliminar"
+                    onclick="eliminarPresupuesto(accionIdActual)">
+                🗑 Eliminar
+            </button>
+
+            <button onclick="cerrarModalAcciones()">
+                Cancelar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="app.js"></script>

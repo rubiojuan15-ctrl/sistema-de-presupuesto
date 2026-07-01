@@ -37,6 +37,8 @@ const email =
 const password =
     document.getElementById("password");
 
+let accionIdActual = null;
+let salirAplicacion = false;
 let idEditando = null;
 let grafico = null;
 let graficoMensual = null;
@@ -1566,49 +1568,26 @@ ${p.fecha || "-"}`
 }   
 function masAcciones(id) {
 
-    const opcion = prompt(
+    accionIdActual = id;
 
-`1 = Cobrar
+    document
+        .getElementById(
+            "modalAcciones"
+        )
+        .classList.add(
+            "mostrar"
+        );
 
-2 = Historial
+}
+function cerrarModalAcciones() {
 
-3 = PDF
-
-4 = WhatsApp
-
-5 = Eliminar`
-
-    );
-
-    if (opcion === "1") {
-
-        registrarPago(id);
-
-    }
-
-    else if (opcion === "2") {
-
-        verHistorial(id);
-
-    }
-
-    else if (opcion === "3") {
-
-        descargarPDF(id);
-
-    }
-
-    else if (opcion === "4") {
-
-        enviarWhatsApp(id);
-
-    }
-
-    else if (opcion === "5") {
-
-        eliminarPresupuesto(id);
-
-    }
+    document
+        .getElementById(
+            "modalAcciones"
+        )
+        .classList.remove(
+            "mostrar"
+        );
 
 }
 function mostrarFormularioGasto() {
@@ -1860,23 +1839,17 @@ async function descargarArchivoInvisible() {
         alert("Hubo un error al guardar el archivo.");
   }
 }
+window.salirAplicacion = false;
+
 if (window.Capacitor?.isNativePlatform?.()) {
 
     window.Capacitor.Plugins.App.addListener(
         "backButton",
-        ({ canGoBack }) => {
+        () => {
 
-            const salir = confirm(
-                "¿Desea cerrar sesión y salir de la aplicación?"
-            );
+            salirAplicacion = true;
 
-            if (salir) {
-
-                logout();
-
-                window.Capacitor.Plugins.App.exitApp();
-
-            }
+            logout();
 
         }
     );
@@ -1934,21 +1907,19 @@ function cerrarModalLogout() {
 
 function confirmarLogout() {
 
-    localStorage.removeItem(
-        "logueado"
-    );
+    localStorage.removeItem("logueado");
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuarioId");
+    localStorage.removeItem("email");
 
-    localStorage.removeItem(
-        "token"
-    );
+    if (salirAplicacion) {
 
-    localStorage.removeItem(
-        "usuarioId"
-    );
+        salirAplicacion = false;
 
-    localStorage.removeItem(
-        "email"
-    );
+        window.Capacitor?.Plugins?.App?.exitApp();
+
+        return;
+    }
 
     location.reload();
 
@@ -1983,3 +1954,8 @@ window.probarCapacitor = probarCapacitor;
 window.toggleMenu = toggleMenu;
 window.cerrarModalLogout = cerrarModalLogout;
 window.confirmarLogout = confirmarLogout;
+window.registrarPago = registrarPago;
+window.verHistorial = verHistorial;
+window.descargarPDF = descargarPDF;
+window.enviarWhatsApp = enviarWhatsApp;
+window.cerrarModalAcciones = cerrarModalAcciones;
