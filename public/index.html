@@ -346,6 +346,33 @@
     </div>
 
     <div id="notificacion" role="status" aria-live="polite"></div>
+    <div id="modalLogout" class="modal-logout">
+
+    <div class="modal-logout-contenido">
+
+        <h2>¿Querés salir de tu cuenta?</h2>
+
+        <div class="modal-logout-botones">
+
+            <button
+                class="btn-volver"
+                onclick="cerrarModalLogout()"
+            >
+                Volver
+            </button>
+
+            <button
+                class="btn-salir"
+                onclick="confirmarLogout()"
+            >
+                Sí, salir
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="app.js"></script>

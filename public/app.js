@@ -1196,17 +1196,13 @@ if (
 }
 function logout() {
 
-    /*alert("LOGOUT EJECUTADO");*/
-
-    localStorage.removeItem("logueado");
-
-    localStorage.removeItem("token");
-
-    localStorage.removeItem("usuarioId");
-
-    localStorage.removeItem("email");
-
-    location.reload();
+    document
+        .getElementById(
+            "modalLogout"
+        )
+        .classList.add(
+            "mostrar"
+        );
 
 }
 function abrirImagen(src) {
@@ -1924,7 +1920,39 @@ function toggleMenu() {
         );
 
 }
-window.toggleMenu = toggleMenu;
+function cerrarModalLogout() {
+
+    document
+        .getElementById(
+            "modalLogout"
+        )
+        .classList.remove(
+            "mostrar"
+        );
+
+}
+
+function confirmarLogout() {
+
+    localStorage.removeItem(
+        "logueado"
+    );
+
+    localStorage.removeItem(
+        "token"
+    );
+
+    localStorage.removeItem(
+        "usuarioId"
+    );
+
+    localStorage.removeItem(
+        "email"
+    );
+
+    location.reload();
+
+}
 /*PullToRefresh.init({
     mainElement: ".content-stack",
 
@@ -1952,3 +1980,6 @@ window.mostrarFormularioGasto = mostrarFormularioGasto;
 window.guardarGasto = guardarGasto;
 window.eliminarGasto = eliminarGasto;
 window.probarCapacitor = probarCapacitor;
+window.toggleMenu = toggleMenu;
+window.cerrarModalLogout = cerrarModalLogout;
+window.confirmarLogout = confirmarLogout;
