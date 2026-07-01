@@ -833,6 +833,8 @@ async function editarPresupuesto(id) {
 }
 async function registrarPago(id) {
 
+    cerrarModalAcciones();
+
       const monto = Number(
         prompt("Ingrese monto cobrado:")
     );
@@ -889,6 +891,9 @@ async function registrarPago(id) {
 }
 
 async function eliminarPresupuesto(id) {
+
+    cerrarModalAcciones();
+
     if (!confirm("Eliminar presupuesto?")) {
         return;
     }
@@ -904,6 +909,8 @@ async function eliminarPresupuesto(id) {
     cargarPresupuestos();
 }
 function descargarPDF(id) {
+
+    cerrarModalAcciones();
 
     window.open(
     API + "/presupuestos/generar-pdf/" + id +
@@ -1364,6 +1371,9 @@ document
     }
 
     async function enviarWhatsApp(id) {
+
+        cerrarModalAcciones();
+
         const respuesta =
             await fetch(API + "/presupuestos/obtener-presupuestos?usuarioId=" +
 
@@ -1477,6 +1487,8 @@ function mostrarNotificacion(texto) {
 
 }
 async function verHistorial(id) {
+
+    cerrarModalAcciones();
 
     const respuesta = await fetch(API + "/presupuestos/pagos/" + id,
 
