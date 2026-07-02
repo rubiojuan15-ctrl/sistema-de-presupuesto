@@ -607,12 +607,21 @@ document.getElementById("facturacionMes").textContent = "$" +
         const margenNeto = totalCobrado > 0
             ? (ganancia / totalCobrado) * 100
             : 0;
+        const tasaCobroEl =
+    document.getElementById("tasaCobro");
 
-        document.getElementById("tasaCobro").textContent =
-            tasaCobro.toFixed(0) + "%";
+        if (tasaCobroEl) {
+            tasaCobroEl.textContent =
+                tasaCobro.toFixed(0) + "%";
+        }
 
-        document.getElementById("margenNeto").textContent =
-            margenNeto.toFixed(0) + "%";
+        const margenNetoEl =
+            document.getElementById("margenNeto");
+
+        if (margenNetoEl) {
+            margenNetoEl.textContent =
+                margenNeto.toFixed(0) + "%";
+        }
     const fechaHoy = new Date()
         .toISOString()
         .split("T")[0];
