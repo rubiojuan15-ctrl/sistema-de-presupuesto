@@ -1,5 +1,4 @@
-const Filesystem = window.Capacitor?.Plugins?.Filesystem;
-
+﻿const Filesystem = window.Capacitor?.Plugins?.Filesystem;
 const sistema = document.getElementById("sistema");
 const API = "https://sistema-de-presupuesto.onrender.com";
 const busqueda = document.getElementById("busqueda");
@@ -10,32 +9,19 @@ const imagen = document.getElementById("imagen");
 const trabajo = document.getElementById("trabajo");
 const observaciones = document.getElementById("observaciones");
 const fechaVencimiento = document.getElementById("fechaVencimiento");
-
 const materiales = document.getElementById("materiales");
-
 const manoDeObra = document.getElementById("manoDeObra");
-
 const total = document.getElementById("total");
-
 const sena = document.getElementById("sena");
-
 const saldo = document.getElementById("saldo");
-
 const lista = document.getElementById("lista");
-
 const estado = document.getElementById("estado");
-
 const filtroEstado = document.getElementById("filtroEstado");
 const filtroVencimiento = document.getElementById("filtroVencimiento");
-
-const usuario =
-    document.getElementById("usuario");
-
-const email =
-    document.getElementById("email");
-
-const password =
-    document.getElementById("password");
+const usuario = document.getElementById("usuario");
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const recordarme = document.getElementById("recordarme");
 
 let accionIdActual = null;
 let salirAplicacion = false;
@@ -1353,10 +1339,11 @@ async function login() {
         const datos = await respuesta.json();
 
         /*alert("Bienvenido");*/
-        localStorage.setItem(
-            "logueado",
-            "si"
-        );
+       if (recordarme.checked) {
+        localStorage.setItem("logueado", "si");
+        } else {
+            sessionStorage.setItem("logueado", "si");
+        }
         localStorage.setItem(
             "token",
             datos.token
@@ -1370,6 +1357,13 @@ async function login() {
         }
         if (datos.email) {
             localStorage.setItem("email", datos.email);
+        }
+        if (document.getElementById("recordarme")?.checked) {
+            localStorage.setItem("usuarioRecordado", datos.usuario || usuario.value.trim());
+            localStorage.setItem("emailRecordado", datos.email || email.value.trim());
+        } else {
+            localStorage.removeItem("usuarioRecordado");
+            localStorage.removeItem("emailRecordado");
         }
         actualizarMenuUsuario();
         document
@@ -1390,6 +1384,48 @@ async function login() {
     cargarGastos();
     cargarResumenMensual();
 }
+function abrirRecuperarPassword() {
+    document.getElementById("emailRecuperacion").value =
+        email.value.trim() || localStorage.getItem("emailRecordado") || "";
+    document.getElementById("modalRecuperarPassword").classList.add("mostrar");
+}
+
+function cerrarRecuperarPassword() {
+    document.getElementById("modalRecuperarPassword").classList.remove("mostrar");
+}
+
+async function solicitarRecuperacionPassword() {
+    const emailRecuperacion = document.getElementById("emailRecuperacion").value.trim();
+    const respuesta = await fetch(API + "/olvide-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailRecuperacion })
+    });
+    const mensaje = await respuesta.text();
+    if (!respuesta.ok) return mostrarNotificacion(mensaje);
+    cerrarRecuperarPassword();
+    mostrarNotificacion(mensaje);
+}
+
+async function restablecerPassword() {
+    const nueva = document.getElementById("nuevaPassword").value;
+    const repetir = document.getElementById("repetirNuevaPassword").value;
+    if (nueva.length < 6) return mostrarNotificacion("La contraseña debe tener al menos 6 caracteres");
+    if (nueva !== repetir) return mostrarNotificacion("Las contraseñas no coinciden");
+
+    const resetToken = new URLSearchParams(location.search).get("reset");
+    const respuesta = await fetch(API + "/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken, password: nueva })
+    });
+    const mensaje = await respuesta.text();
+    if (!respuesta.ok) return mostrarNotificacion(mensaje);
+    history.replaceState({}, "", location.pathname);
+    document.getElementById("modalNuevaPassword").classList.remove("mostrar");
+    mostrarNotificacion(mensaje + ". Ya podés iniciar sesión.");
+}
+
 async function registrarse() {
     const usuarioVal = usuario.value.trim();
     const emailVal = email.value.trim();
@@ -2238,10 +2274,26 @@ function cerrarModalAcciones() {
         return cargarPresupuestos();
     }
 });*/
+const usuarioRecordado = localStorage.getItem("usuarioRecordado") || "";
+const emailRecordado = localStorage.getItem("emailRecordado") || "";
+if (usuarioRecordado || emailRecordado) {
+    usuario.value = usuarioRecordado;
+    email.value = emailRecordado;
+    document.getElementById("recordarme").checked = true;
+}
+
+if (new URLSearchParams(location.search).get("reset")) {
+    document.getElementById("modalNuevaPassword").classList.add("mostrar");
+}
+
 // --- EXPORTAR FUNCIONES AL HTML ---
 // Esto permite que los onclick="" del HTML sigan funcionando como antes
 
 window.login = login;
+window.abrirRecuperarPassword = abrirRecuperarPassword;
+window.cerrarRecuperarPassword = cerrarRecuperarPassword;
+window.solicitarRecuperacionPassword = solicitarRecuperacionPassword;
+window.restablecerPassword = restablecerPassword;
 window.registrarse = registrarse;
 window.logout = logout;
 window.guardarPresupuesto = guardarPresupuesto;

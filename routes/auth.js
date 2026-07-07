@@ -7,7 +7,7 @@ const router = express.Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const crypto = require("crypto");
-const transporter = require("../utils/mailer");
+const resend = require("../utils/mailer");
 
 function normalizeEmail(value) {
     return String(value || "").trim().toLowerCase();
@@ -225,44 +225,56 @@ router.post("/olvide-password", async (req, res) => {
                 expiracion
             ]
         );
+        const enlace = `${process.env.APP_URL}/reset-password.html?token=${token}`;
+        const { error } = await resend.emails.send({
 
-        const enlace =
-            `${process.env.APP_URL}/reset-password.html?token=${token}`;
+        from: process.env.EMAIL_FROM,
 
-        await transporter.sendMail({
+        to: [email],
 
-            from: process.env.EMAIL_USER,
+        subject: "Recuperar contraseña",
 
-            to: email,
+        html: `
+            <h2>Recuperación de contraseña</h2>
 
-            subject: "Recuperar contraseña",
+            <p>Hola ${usuario.rows[0].usuario}.</p>
 
-            html: `
-                <h2>Recuperación de contraseña</h2>
+            <p>Hacé clic en el siguiente botón para crear una nueva contraseña.</p>
 
-                <p>Hola ${usuario.rows[0].usuario}.</p>
+            <p>
+                <a
+                    href="${enlace}"
+                    style="
+                        background:#8b5e3c;
+                        color:white;
+                        padding:12px 18px;
+                        text-decoration:none;
+                        border-radius:6px;
+                        display:inline-block;
+                    "
+                >
+                    Recuperar contraseña
+                </a>
+            </p>
 
-                <p>Hacé clic en el siguiente botón para crear una nueva contraseña.</p>
+            <p>Este enlace vence en 30 minutos.</p>
 
-                <p>
-                    <a href="${enlace}">
-                        Recuperar contraseña
-                    </a>
-                </p>
-
-                <p>Este enlace vence en 30 minutos.</p>
-            `
+        `
         });
 
+        if (error) {
+            console.error(error);
+            return res.status(500).send("No se pudo enviar el correo.");
+        }
         res.send("Si el correo existe, recibirás un enlace para recuperar tu contraseña.");
 
-    } catch (error) {
+            } catch (error) {
 
-        console.error(error);
+                console.error(error);
 
-        res.status(500).send("Error al enviar el correo.");
+                res.status(500).send("Error al enviar el correo.");
 
-    }
+            }
 
 });
 router.post("/reset-password", async (req, res) => {
