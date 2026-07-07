@@ -17,7 +17,7 @@ function isValidEmail(email) {
     return EMAIL_RE.test(email);
 }
 
-async function enviarEmailRecuperacion(email, token) {
+/*async function enviarEmailRecuperacion(email, token) {
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.EMAIL_FROM;
     const appUrl = process.env.APP_URL || "https://sistema-de-presupuesto.onrender.com";
@@ -37,7 +37,7 @@ async function enviarEmailRecuperacion(email, token) {
     });
 
     if (!respuesta.ok) throw new Error(`Error del servicio de email: ${respuesta.status}`);
-}
+}*/
 
 router.post("/login", async (req, res) => {
     const email = normalizeEmail(req.body.email);
@@ -135,7 +135,7 @@ router.post("/registro", async (req, res) => {
     }
 });
 
-router.post("/olvide-password", async (req, res) => {
+/*router.post("/olvide-password", async (req, res) => {
     const email = normalizeEmail(req.body.email);
     const mensaje = "Si el email está registrado, recibirás un enlace en unos minutos.";
 
@@ -162,7 +162,7 @@ router.post("/olvide-password", async (req, res) => {
         console.error(error);
         res.status(503).send("No pudimos enviar el email en este momento");
     }
-});
+});*/
 
 router.post("/restablecer-password", async (req, res) => {
     const resetToken = String(req.body.token || "");
