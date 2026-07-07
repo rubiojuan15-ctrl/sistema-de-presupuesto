@@ -1,4 +1,4 @@
-﻿const Filesystem = window.Capacitor?.Plugins?.Filesystem;
+const Filesystem = window.Capacitor?.Plugins?.Filesystem;
 
 const sistema = document.getElementById("sistema");
 const API = "https://sistema-de-presupuesto.onrender.com";
@@ -69,29 +69,37 @@ function temaDelSistema() {
     return consultaTemaSistema.matches ? "dark" : "light";
 }
 
-function aplicarTema(tema) {
+function aplicarTema(tema, preferencia = localStorage.getItem("tema") || "auto") {
     document.documentElement.dataset.theme = tema;
 
-    const icono = document.getElementById("themeIcon");
+    const opciones = {
+        auto: document.getElementById("temaAuto"),
+        light: document.getElementById("temaClaro"),
+        dark: document.getElementById("temaOscuro")
+    };
 
-    if (icono) {
-        icono.textContent = "Auto";
-        icono.title = tema === "dark"
-            ? "Modo oscuro automatico"
-            : "Modo claro automatico";
-    }
+    Object.entries(opciones).forEach(([valor, boton]) => {
+        if (boton) boton.setAttribute("aria-pressed", String(valor === preferencia));
+    });
 }
 
-function toggleTema() {
-    sincronizarTemaSistema();
-    mostrarNotificacion("Tema automatico segun el sistema");
+function seleccionarTema(preferencia) {
+    if (!["auto", "light", "dark"].includes(preferencia)) return;
+
+    const temaAnterior = document.documentElement.dataset.theme;
+    const temaActual = preferencia === "auto" ? temaDelSistema() : preferencia;
+    localStorage.setItem("tema", preferencia);
+    aplicarTema(temaActual, preferencia);
+
+    if (temaAnterior !== temaActual) actualizarGraficosTema();
 }
 
 function sincronizarTemaSistema() {
+    const preferencia = localStorage.getItem("tema") || "auto";
     const temaAnterior = document.documentElement.dataset.theme;
-    const temaActual = temaDelSistema();
+    const temaActual = preferencia === "auto" ? temaDelSistema() : preferencia;
 
-    aplicarTema(temaActual);
+    aplicarTema(temaActual, preferencia);
 
     if (temaAnterior && temaAnterior !== temaActual) {
         actualizarGraficosTema();
@@ -99,15 +107,20 @@ function sincronizarTemaSistema() {
 }
 
 if (consultaTemaSistema.addEventListener) {
-    consultaTemaSistema.addEventListener("change", sincronizarTemaSistema);
+    consultaTemaSistema.addEventListener("change", () => {
+        if ((localStorage.getItem("tema") || "auto") === "auto") sincronizarTemaSistema();
+    });
 } else if (consultaTemaSistema.addListener) {
-    consultaTemaSistema.addListener(sincronizarTemaSistema);
+    consultaTemaSistema.addListener(() => {
+        if ((localStorage.getItem("tema") || "auto") === "auto") sincronizarTemaSistema();
+    });
 }
-function actualizarMenuUsuario() {
+async function actualizarMenuUsuario() {
     const nombre = localStorage.getItem("usuario") || "Usuario";
     const emailUsuario = localStorage.getItem("email") || "Sin email cargado";
     const nombreElemento = document.getElementById("menuUsuarioNombre");
     const emailElemento = document.getElementById("menuUsuarioEmail");
+    const avatarElemento = document.getElementById("usuarioAvatar");
 
     if (nombreElemento) {
         nombreElemento.textContent = "Hola, " + nombre;
@@ -116,9 +129,21 @@ function actualizarMenuUsuario() {
     if (emailElemento) {
         emailElemento.textContent = emailUsuario;
     }
+
+    if (avatarElemento && emailUsuario !== "Sin email cargado") {
+        try {
+            const datosEmail = new TextEncoder().encode(emailUsuario.trim().toLowerCase());
+            const hashBuffer = await crypto.subtle.digest("SHA-256", datosEmail);
+            const hash = Array.from(new Uint8Array(hashBuffer))
+                .map(byte => byte.toString(16).padStart(2, "0"))
+                .join("");
+            avatarElemento.src = `https://www.gravatar.com/avatar/${hash}?s=96&d=mp`;
+        } catch (error) {
+            avatarElemento.src = "avatar.png";
+        }
+    }
 }
 
-localStorage.removeItem("tema");
 sincronizarTemaSistema();
 function calcularTotal() {
 
@@ -647,7 +672,7 @@ document.getElementById("facturacionMes").textContent = "$" +
 
         alertas.innerHTML += `
             <div class="alerta">
-                âš ï¸ Vence hoy:
+                &#9888;&#65039; Vence hoy:
                 ${p.cliente}
             </div>
         `;
@@ -666,7 +691,7 @@ document.getElementById("facturacionMes").textContent = "$" +
                 alerta
                 alerta-atrasada
             ">
-                ðŸš¨ Atrasado:
+                &#128680; Atrasado:
                 ${p.cliente}
             </div>
         `;
@@ -2234,7 +2259,7 @@ window.guardarGasto = guardarGasto;
 window.eliminarGasto = eliminarGasto;
 window.probarCapacitor = probarCapacitor;
 window.toggleMenu = toggleMenu;
-window.toggleTema = toggleTema;
+window.seleccionarTema = seleccionarTema;
 window.cerrarModalLogout = cerrarModalLogout;
 window.confirmarLogout = confirmarLogout;
 window.registrarPago = registrarPago;

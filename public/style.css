@@ -1304,6 +1304,19 @@ td img:hover {
     gap: 10px;
 }
 
+.avatar-button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    overflow: hidden;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+}
+
 .theme-toggle {
     min-width: 76px;
     min-height: 40px;
@@ -1361,6 +1374,45 @@ td img:hover {
 .menu-header strong,
 .menu-header small {
     display: block;
+}
+
+.tema-menu {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+}
+
+.tema-menu-titulo {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--ink-soft);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.tema-opciones {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+    background: var(--canvas);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.menu-usuario .tema-opciones button {
+    min-height: 34px;
+    padding: 6px 4px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.menu-usuario .tema-opciones button[aria-pressed="true"] {
+    color: #fff;
+    background: var(--brand);
+    box-shadow: var(--shadow-sm);
 }
 
 .menu-header small {

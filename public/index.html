@@ -71,10 +71,21 @@
                     </div>
                 </div>
                <div class="usuario-menu">
-                <img src="avatar.png" class="avatar" onclick="toggleMenu()">
+                <button class="avatar-button" type="button" onclick="toggleMenu()" aria-label="Abrir menú de usuario" aria-haspopup="true">
+                    <img id="usuarioAvatar" src="avatar.png" class="avatar" alt="Foto del usuario">
+                </button>
                 <div id="menuUsuario" class="menu-usuario">
                     <div class="menu-header">
-                        Hola, Juan
+                        <strong id="menuUsuarioNombre">Hola</strong>
+                        <small id="menuUsuarioEmail">Sin email cargado</small>
+                    </div>
+                    <div class="tema-menu" aria-label="Apariencia">
+                        <span class="tema-menu-titulo">Apariencia</span>
+                        <div class="tema-opciones" role="group" aria-label="Elegir tema">
+                            <button id="temaAuto" type="button" onclick="seleccionarTema('auto')" aria-pressed="true">Auto</button>
+                            <button id="temaClaro" type="button" onclick="seleccionarTema('light')" aria-pressed="false">Claro</button>
+                            <button id="temaOscuro" type="button" onclick="seleccionarTema('dark')" aria-pressed="false">Oscuro</button>
+                        </div>
                     </div>
                     <button onclick="logout()">
                         🚪 Cerrar sesión
@@ -260,6 +271,8 @@
                         <article class="card"><span>Promedio</span><p id="promedio">$0</p></article>
                         <article class="card"><span>Trabajos pendientes</span><p id="cantidadPendientes">0</p></article>
                         <article class="card accent-card"><span>Por cobrar</span><p id="dashPorCobrar">$0</p></article>
+                        <article class="card"><span>Tasa de cobro</span><p id="tasaCobro">0%</p></article>
+                        <article class="card"><span>Margen neto</span><p id="margenNeto">0%</p></article>
                         <article class="card"><span>Mejor cliente</span><p id="mejorCliente">-</p><small id="montoMejorCliente">$0</small></article>
                         <article class="card"><span>Mejor mes</span><p id="mejorMes">-</p><small id="montoMejorMes">$0</small></article>
                     </div>
@@ -412,7 +425,35 @@
 
 </div>
 
+<div id="modalCobro" class="modal-logout">
+    <div class="modal-logout-contenido modal-formulario">
+        <h2>Registrar cobro</h2>
+        <p class="modal-copy">Ingresa el monto cobrado para actualizar el presupuesto.</p>
+        <label for="montoCobro">Monto cobrado</label>
+        <div class="money-field">
+            <span aria-hidden="true">$</span>
+            <input type="number" id="montoCobro" placeholder="0" min="1" inputmode="decimal">
+        </div>
+        <p id="errorCobro" class="modal-error" aria-live="polite"></p>
+        <div class="modal-logout-botones">
+            <button class="btn-volver" type="button" onclick="cerrarModalCobro()">Cancelar</button>
+            <button class="btn-salir" type="button" onclick="confirmarCobro()">Registrar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalConfirmacion" class="modal-logout">
+    <div class="modal-logout-contenido">
+        <h2 id="modalConfirmacionTitulo">Confirmar accion</h2>
+        <p id="modalConfirmacionTexto" class="modal-copy">Esta accion no se puede deshacer.</p>
+        <div class="modal-logout-botones">
+            <button class="btn-volver" type="button" onclick="cerrarModalConfirmacion(false)">Cancelar</button>
+            <button id="modalConfirmacionAceptar" class="btn-salir btn-danger" type="button" onclick="cerrarModalConfirmacion(true)">Eliminar</button>
+        </div>
+    </div>
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js?v=logout-fix"></script>
 </body>
 </html>
