@@ -41,7 +41,18 @@ async function ensureSchema(client = pool) {
             fecha TEXT NOT NULL,
             monto NUMERIC(14,2) NOT NULL CHECK (monto > 0)
         );
+        CREATE TABLE IF NOT EXISTS password_resets (
+        id SERIAL PRIMARY KEY,
+        usuarioid INTEGER NOT NULL,
+        token TEXT NOT NULL,
+        expiracion TIMESTAMP NOT NULL,
+        usado BOOLEAN DEFAULT FALSE,
 
+        CONSTRAINT fk_password_resets_usuario
+            FOREIGN KEY (usuarioid)
+            REFERENCES usuarios(id)
+            ON DELETE CASCADE
+         );
         CREATE TABLE IF NOT EXISTS pagos_huerfanos_migracion (
             id SERIAL PRIMARY KEY,
             sqlite_pago_id INTEGER NOT NULL,
@@ -58,6 +69,11 @@ async function ensureSchema(client = pool) {
             ON gastos (usuarioid);
         CREATE INDEX IF NOT EXISTS pagos_presupuestoid_idx
             ON pagos (presupuestoid);
+            CREATE INDEX IF NOT EXISTS password_resets_usuarioid_idx
+        ON password_resets (usuarioid);
+
+        CREATE INDEX IF NOT EXISTS password_resets_token_idx
+        ON password_resets (token); 
     `);
 
     await client.query(`
