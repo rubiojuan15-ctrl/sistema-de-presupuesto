@@ -164,7 +164,7 @@ router.post("/registro", async (req, res) => {
     }
 });*/
 
-router.post("/restablecer-password", async (req, res) => {
+/*router.post("/restablecer-password", async (req, res) => {
     const resetToken = String(req.body.token || "");
     const password = String(req.body.password || "");
 
@@ -186,7 +186,7 @@ router.post("/restablecer-password", async (req, res) => {
     } catch (error) {
         res.status(400).send("El enlace venció o no es válido");
     }
-});
+});*/
 router.post("/olvide-password", async (req, res) => {
 
     const email = normalizeEmail(req.body.email);
