@@ -8,7 +8,7 @@ const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const crypto = require("crypto");
 const transporter = require("../utils/mailer");
-const crypto = require("crypto");
+
 function normalizeEmail(value) {
     return String(value || "").trim().toLowerCase();
 }
