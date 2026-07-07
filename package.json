@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",
+    "@capacitor/app": "^8.1.0",
     "@capacitor/browser": "^8.0.3",
     "@capacitor/cli": "^8.4.1",
     "@capacitor/core": "^8.4.1",
@@ -18,14 +19,19 @@
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/share": "^8.0.1",
     "bcrypt": "latest",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "exceljs": "latest",
     "express": "latest",
     "jsonwebtoken": "latest",
     "multer": "latest",
+    "nodemailer": "^9.0.3",
     "pdfkit": "latest",
     "pg": "^8.22.0",
+    "pulltorefreshjs": "^0.1.22",
     "sqlite3": "latest"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
   }
 }
