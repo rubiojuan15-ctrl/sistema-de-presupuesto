@@ -25,10 +25,10 @@
     "express": "latest",
     "jsonwebtoken": "latest",
     "multer": "latest",
-    "nodemailer": "^9.0.3",
     "pdfkit": "latest",
     "pg": "^8.22.0",
     "pulltorefreshjs": "^0.1.22",
+    "resend": "^6.17.1",
     "sqlite3": "latest"
   },
   "devDependencies": {
