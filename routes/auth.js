@@ -227,39 +227,18 @@ router.post("/olvide-password", async (req, res) => {
         );
         const enlace = `${process.env.APP_URL}/reset-password.html?token=${token}`;
         const { error } = await resend.emails.send({
-
-        from: process.env.EMAIL_FROM,
-
-        to: [email],
-
-        subject: "Recuperar contraseña",
-
-        html: `
-            <h2>Recuperación de contraseña</h2>
-
-            <p>Hola ${usuario.rows[0].usuario}.</p>
-
-            <p>Hacé clic en el siguiente botón para crear una nueva contraseña.</p>
-
-            <p>
-                <a
-                    href="${enlace}"
-                    style="
-                        background:#8b5e3c;
-                        color:white;
-                        padding:12px 18px;
-                        text-decoration:none;
-                        border-radius:6px;
-                        display:inline-block;
-                    "
-                >
-                    Recuperar contraseña
-                </a>
-            </p>
-
-            <p>Este enlace vence en 30 minutos.</p>
-
-        `
+            from: process.env.EMAIL_FROM,
+            to: [email],
+            subject: "Recuperar contraseña",
+            html: `
+                <h2>Recuperación de contraseña</h2>
+                <p>Hola ${usuario.rows[0].usuario}.</p>
+                <p>
+                    <a href="${enlace}">
+                        Recuperar contraseña
+                    </a>
+                </p>
+            `
         });
 
         if (error) {
