@@ -1582,3 +1582,42 @@ td img:hover {
     line-height: 1;
     font-size: 18px;
 }
+.login-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.remember-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.remember-option input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--brand);
+}
+
+.forgot-password {
+    padding: 4px 0;
+    color: var(--brand-dark);
+    background: transparent;
+    border: 0;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.auth-modal-content p { color: var(--ink-soft); }
+.auth-modal-content label { display: block; margin: 14px 0 6px; }
+.auth-modal-content input { width: 100%; }
+
+@media (max-width: 420px) {
+    .login-options { align-items: flex-start; flex-direction: column; }
+}
