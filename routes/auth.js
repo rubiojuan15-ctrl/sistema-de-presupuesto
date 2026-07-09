@@ -226,22 +226,14 @@ router.post("/olvide-password", async (req, res) => {
             ]
         );
         const enlace = `${process.env.APP_URL}/reset-password.html?token=${token}`;
-        const { error } = await resend.emails.send({
-            from: process.env.EMAIL_FROM,
-            to: [email],
+        try {
+    await resend.send({
+            to: email,
+            from: "rubiojuan15@gmail.com",
             subject: "Recuperar contraseña",
-            html: `
-                <h2>Recuperación de contraseña</h2>
-                <p>Hola ${usuario.rows[0].usuario}.</p>
-                <p>
-                    <a href="${enlace}">
-                        Recuperar contraseña
-                    </a>
-                </p>
-            `
-        });
-
-        if (error) {
+            html: html
+            });
+        } catch (error) {
             console.error(error);
             return res.status(500).send("No se pudo enviar el correo.");
         }
