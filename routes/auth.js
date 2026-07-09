@@ -7,7 +7,7 @@ const router = express.Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const crypto = require("crypto");
-const resend = require("../utils/mailer");
+const mailer = require("../utils/mailer");
 
 function normalizeEmail(value) {
     return String(value || "").trim().toLowerCase();
@@ -227,7 +227,7 @@ router.post("/olvide-password", async (req, res) => {
         );
         const enlace = `${process.env.APP_URL}/reset-password.html?token=${token}`;
             try {
-                await resend.send({
+                await mailer.send({
                     to: email,
                     from: "estudiojr995@gmail.com",
                     subject: "Recuperar contraseña",

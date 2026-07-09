@@ -29,7 +29,6 @@
     "pdfkit": "latest",
     "pg": "^8.22.0",
     "pulltorefreshjs": "^0.1.22",
-    "resend": "^6.17.1",
     "sqlite3": "latest"
   },
   "devDependencies": {
