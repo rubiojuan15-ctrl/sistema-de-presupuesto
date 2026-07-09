@@ -1,6 +1,5 @@
-const { Resend } = require("resend");
+const sgMail = require("@sendgrid/mail");
 
-// Reemplazá re_xxxxxxxxx por tu API Key real
-const resend = new Resend(process.env.RESEND_API_KEY || "re_MJwjLjvt_9M215x9WR6BD3sfRG6YZ2wp1");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-module.exports = resend;
+module.exports = sgMail;
