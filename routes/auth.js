@@ -226,17 +226,32 @@ router.post("/olvide-password", async (req, res) => {
             ]
         );
         const enlace = `${process.env.APP_URL}/reset-password.html?token=${token}`;
-        try {
-    await resend.send({
-            to: email,
-            from: "rubiojuan15@gmail.com",
-            subject: "Recuperar contraseña",
-            html: html
-            });
-        } catch (error) {
-            console.error(error);
-            return res.status(500).send("No se pudo enviar el correo.");
-        }
+            try {
+                await resend.send({
+                    to: email,
+                    from: "rubiojuan15@gmail.com",
+                    subject: "Recuperar contraseña",
+                    html: `
+                        <h2>Recuperación de contraseña</h2>
+
+                        <p>Hola ${usuario.rows[0].usuario}.</p>
+
+                        <p>Hacé clic en el siguiente enlace para crear una nueva contraseña:</p>
+
+                        <p>
+                            <a href="${enlace}">
+                                Recuperar contraseña
+                            </a>
+                        </p>
+
+                        <p>Este enlace vence en 30 minutos.</p>
+                    `
+                });
+            } 
+            catch (error) {
+                console.error("SENDGRID:", error.response?.body || error);
+                return res.status(500).send("No se pudo enviar el correo.");
+            }
         res.send("Si el correo existe, recibirás un enlace para recuperar tu contraseña.");
 
             } catch (error) {
