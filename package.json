@@ -18,6 +18,7 @@
     "@capacitor/file-transfer": "^2.0.4",
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/share": "^8.0.1",
+    "@sendgrid/mail": "^8.1.6",
     "bcrypt": "latest",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
