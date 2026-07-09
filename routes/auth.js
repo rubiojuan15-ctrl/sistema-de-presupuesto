@@ -229,7 +229,7 @@ router.post("/olvide-password", async (req, res) => {
             try {
                 await resend.send({
                     to: email,
-                    from: "rubiojuan15@gmail.com",
+                    from: "estudijr995@gmail.com",
                     subject: "Recuperar contraseña",
                     html: `
                         <h2>Recuperación de contraseña</h2>
