@@ -48,7 +48,11 @@ router.post("/login", async (req, res) => {
         return res.status(400).send("Faltan credenciales o contraseña");
     }
 
+    const medicionLogin = `backend:login:${Date.now()}:${Math.random().toString(16).slice(2)}`;
+    console.time(medicionLogin);
+
     try {
+        console.time(`${medicionLogin}:postgres`);
         const resultado = email
             ? await pool.query(
                   "SELECT id, usuario, email, password FROM usuarios WHERE LOWER(email) = $1",
@@ -58,17 +62,24 @@ router.post("/login", async (req, res) => {
                   "SELECT id, usuario, email, password FROM usuarios WHERE usuario = $1",
                   [usuario]
               );
+        console.timeEnd(`${medicionLogin}:postgres`);
         const row = resultado.rows[0];
 
-        if (!row || !(await bcrypt.compare(password, row.password))) {
+        console.time(`${medicionLogin}:bcrypt`);
+        const passwordCorrecta = row ? await bcrypt.compare(password, row.password) : false;
+        console.timeEnd(`${medicionLogin}:bcrypt`);
+
+        if (!row || !passwordCorrecta) {
             return res.status(401).send("Usuario o contraseña incorrectos");
         }
 
+        console.time(`${medicionLogin}:jwt`);
         const token = jwt.sign(
             { id: row.id },
             process.env.JWT_SECRET || "secreto123",
             { expiresIn: "7d" }
         );
+        console.timeEnd(`${medicionLogin}:jwt`);
 
         res.json({
             token,
@@ -79,6 +90,8 @@ router.post("/login", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send("Error al iniciar sesión");
+    } finally {
+        console.timeEnd(medicionLogin);
     }
 });
 

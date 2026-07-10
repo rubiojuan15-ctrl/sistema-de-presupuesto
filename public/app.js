@@ -1,4 +1,5 @@
 ﻿const Filesystem = window.Capacitor?.Plugins?.Filesystem;
+const BiometricAuth = window.Capacitor?.Plugins?.BiometricAuth;
 const sistema = document.getElementById("sistema");
 const API = "https://sistema-de-presupuesto.onrender.com";
 const busqueda = document.getElementById("busqueda");
@@ -48,6 +49,159 @@ function token() {
     return localStorage.getItem("token") || "";
 
 }
+
+const INACTIVIDAD_MS = 10 * 60 * 1000;
+const AVISO_INACTIVIDAD_MS = 60 * 1000;
+let temporizadorInactividad = null;
+let temporizadorCierreInactividad = null;
+let avisoInactividadActivo = false;
+let contadorMediciones = 0;
+
+function iniciarMedicion(nombre) {
+    const etiqueta = `${nombre} #${++contadorMediciones}`;
+    console.time(etiqueta);
+    return () => console.timeEnd(etiqueta);
+}
+
+function sesionAutenticada() {
+    return Boolean(
+        localStorage.getItem("token") &&
+        localStorage.getItem("usuarioId") &&
+        (
+            localStorage.getItem("logueado") === "si" ||
+            sessionStorage.getItem("logueado") === "si"
+        )
+    );
+}
+
+function esAndroidNativo() {
+    return window.Capacitor?.isNativePlatform?.() && window.Capacitor?.getPlatform?.() === "android";
+}
+
+function haySesionGuardada() {
+    return Boolean(localStorage.getItem("token") && localStorage.getItem("usuarioId"));
+}
+
+function cargarDatosEnSegundoPlano(origen = "login") {
+    const iniciarCarga = () => {
+        const fin = iniciarMedicion(`frontend:${origen}:carga-datos-total`);
+        Promise.allSettled([
+            cargarPresupuestos(),
+            cargarResumenGastos(),
+            cargarGastos(),
+            cargarResumenMensual()
+        ]).finally(fin);
+    };
+
+    if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(iniciarCarga, { timeout: 500 });
+        return;
+    }
+
+    setTimeout(iniciarCarga, 0);
+}
+
+function mostrarSistemaAutenticado(origen = "login") {
+    const fin = iniciarMedicion(`frontend:${origen}:mostrar-sistema`);
+    document
+        .getElementById("login")
+        .style.display = "none";
+
+    document
+        .getElementById("sistema")
+        .style.display = "block";
+
+    actualizarMenuUsuario();
+    fin();
+    iniciarControlInactividad();
+    cargarDatosEnSegundoPlano(origen);
+}
+
+async function prepararBotonBiometria() {
+    const boton = document.getElementById("btnBiometria");
+    if (!boton || !esAndroidNativo() || !BiometricAuth || !haySesionGuardada()) return;
+
+    try {
+        const estado = await BiometricAuth.isAvailable();
+        boton.hidden = !estado.available;
+        if (!estado.available && estado.message) {
+            boton.title = estado.message;
+        }
+    } catch (error) {
+        console.error(error);
+        boton.hidden = true;
+    }
+}
+
+async function entrarConBiometria() {
+    if (!haySesionGuardada()) {
+        alert("Primero ingresa con tu usuario y contrasena para activar el acceso biometrico.");
+        return;
+    }
+
+    try {
+        await BiometricAuth.authenticate({
+            title: "Sistema de Presupuestos",
+            subtitle: "Usa tu huella, rostro o PIN del dispositivo"
+        });
+
+        localStorage.setItem("logueado", "si");
+        sessionStorage.removeItem("logueado");
+        mostrarSistemaAutenticado("biometria");
+    } catch (error) {
+        if (error?.message) {
+            alert(error.message);
+            return;
+        }
+        alert("No se pudo autenticar con biometria.");
+    }
+}
+
+function mostrarAvisoInactividad() {
+    if (!sesionAutenticada()) return;
+    avisoInactividadActivo = true;
+    document.getElementById("modalInactividad")?.classList.add("mostrar");
+    clearTimeout(temporizadorCierreInactividad);
+    temporizadorCierreInactividad = setTimeout(cerrarSesionPorInactividad, AVISO_INACTIVIDAD_MS);
+}
+
+function ocultarAvisoInactividad() {
+    avisoInactividadActivo = false;
+    document.getElementById("modalInactividad")?.classList.remove("mostrar");
+    clearTimeout(temporizadorCierreInactividad);
+}
+
+function continuarSesion() {
+    ocultarAvisoInactividad();
+    reiniciarTemporizadorInactividad();
+}
+
+function cerrarSesionPorInactividad() {
+    ocultarAvisoInactividad();
+    localStorage.removeItem("logueado");
+    sessionStorage.removeItem("logueado");
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuarioId");
+    localStorage.removeItem("usuario");
+    localStorage.removeItem("email");
+    clearTimeout(temporizadorInactividad);
+    location.reload();
+}
+
+function reiniciarTemporizadorInactividad() {
+    if (!sesionAutenticada() || avisoInactividadActivo) return;
+    clearTimeout(temporizadorInactividad);
+    temporizadorInactividad = setTimeout(mostrarAvisoInactividad, INACTIVIDAD_MS);
+}
+
+function iniciarControlInactividad() {
+    if (!sesionAutenticada()) return;
+    reiniciarTemporizadorInactividad();
+}
+
+["click", "touchstart", "keydown", "scroll", "pointerdown"].forEach(evento => {
+    window.addEventListener(evento, reiniciarTemporizadorInactividad, { passive: true });
+});
 
 const consultaTemaSistema = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -364,6 +518,8 @@ async function guardarPresupuesto() {
 //cargar presupuestos
 async function cargarPresupuestos() {
 
+    const finTotal = iniciarMedicion("frontend:cargarPresupuestos:total");
+    const finFetch = iniciarMedicion("frontend:cargarPresupuestos:fetch");
     const respuesta = await fetch(API + "/presupuestos/obtener-presupuestos?busqueda=" +
 
         busqueda.value +
@@ -387,15 +543,20 @@ async function cargarPresupuestos() {
             }
         }
     );
+    finFetch();
 
     if (!respuesta.ok) {
         if (respuesta.status === 401) {
             logout();
         }
+        finTotal();
         return;
     }
 
+    const finJson = iniciarMedicion("frontend:cargarPresupuestos:json");
     const presupuestos = await respuesta.json();
+    finJson();
+    const finRender = iniciarMedicion("frontend:cargarPresupuestos:render");
     
     const hoy = new Date();
 
@@ -863,6 +1024,8 @@ crearGraficoMensual(
     presupuestos
 )
 
+finRender();
+finTotal();
 };
 //editar presupuestos
 async function editarPresupuesto(id) {
@@ -1311,6 +1474,8 @@ function crearGraficoMensual(presupuestos) {
 }
 async function login() {
 
+    const finLogin = iniciarMedicion("frontend:login:total");
+    const finFetch = iniciarMedicion("frontend:login:fetch");
     const respuesta =
         await fetch(API +"/login", {
 
@@ -1335,8 +1500,11 @@ async function login() {
             })
 
         });
+    finFetch();
     if (respuesta.ok) {
+        const finJson = iniciarMedicion("frontend:login:json");
         const datos = await respuesta.json();
+        finJson();
 
         /*alert("Bienvenido");*/
        if (recordarme.checked) {
@@ -1365,24 +1533,14 @@ async function login() {
             localStorage.removeItem("usuarioRecordado");
             localStorage.removeItem("emailRecordado");
         }
-        actualizarMenuUsuario();
-        document
-        .getElementById("login")
-        .style.display = "none";
-
-    document
-        .getElementById("sistema")
-        .style.display = "block";    
-        cargarPresupuestos();
+        mostrarSistemaAutenticado("login");
+        prepararBotonBiometria();
     } else {
 
         alert(await respuesta.text() || "Usuario incorrecto");
 
     }
-    cargarPresupuestos();
-    cargarResumenGastos();
-    cargarGastos();
-    cargarResumenMensual();
+    finLogin();
 }
 function abrirRecuperarPassword() {
     document.getElementById("emailRecuperacion").value =
@@ -1472,23 +1630,9 @@ async function registrarse() {
         alert("No se pudo conectar con el servidor");
     }
 }
-if (
-    localStorage.getItem("logueado")
-    === "si"
-) {
+if (sesionAutenticada()) {
 
-    document
-        .getElementById("login")
-        .style.display = "none";
-
-    document
-        .getElementById("sistema")
-        .style.display = "block";
-
-    actualizarMenuUsuario();
-    cargarPresupuestos();
-    cargarResumenGastos();
-    cargarGastos();
+    mostrarSistemaAutenticado("sesion-guardada");
 
 } else {
 
@@ -1501,6 +1645,7 @@ if (
         .style.display = "none";
 
 }
+prepararBotonBiometria();
 function logout() {
 
     document
@@ -1947,6 +2092,7 @@ async function guardarGasto() {
 }
 async function cargarResumenGastos() {
 
+    const fin = iniciarMedicion("frontend:cargarResumenGastos");
     const respuesta =
         await fetch(API + "/gastos/resumen", {
             headers: { authorization: token() }
@@ -1963,10 +2109,12 @@ async function cargarResumenGastos() {
     ).textContent =
         "$" +
         gastos.toLocaleString("es-AR");
+    fin();
 
 }
 async function cargarGastos() {
 
+    const fin = iniciarMedicion("frontend:cargarGastos");
     const respuesta =
         await fetch(API + "/gastos", {
             headers: { authorization: token() }
@@ -2001,6 +2149,7 @@ async function cargarGastos() {
 
     });
 
+    fin();
 }
 async function eliminarGasto(id) {
 
@@ -2050,10 +2199,19 @@ function cerrarModalConfirmacion(confirmado) {
 }
 async function cargarResumenMensual() {
 
-    const gastosRespuesta =
-        await fetch(API + "/gastos/resumen-mensual", {
-            headers: { authorization: token() }
-        });
+    const fin = iniciarMedicion("frontend:cargarResumenMensual");
+
+    const [gastosRespuesta, cobradoRespuesta] =
+        await Promise.all([
+            fetch(API + "/gastos/resumen-mensual", {
+                headers: { authorization: token() }
+            }),
+            fetch(API +  "/presupuestos/resumen-mensual",
+                {
+                    headers: { authorization: token() }
+                }
+            )
+        ]);
 
     const gastosDatos =
         await gastosRespuesta.json();
@@ -2066,13 +2224,6 @@ async function cargarResumenMensual() {
     ).textContent =
         "$" +
         gastosMes.toLocaleString("es-AR");
-
-    const cobradoRespuesta =
-        await fetch(API +  "/presupuestos/resumen-mensual",
-            {
-                headers: { authorization: token() }
-            }
-        );
 
     const cobradoDatos =
         await cobradoRespuesta.json();
@@ -2090,6 +2241,7 @@ async function cargarResumenMensual() {
     ).textContent =
         "$" +
         gananciaMes.toLocaleString("es-AR");
+    fin();
 
 }
 async function descargarBackup() {
@@ -2243,10 +2395,14 @@ function cerrarModalLogout() {
 function confirmarLogout() {
 
     localStorage.removeItem("logueado");
+    sessionStorage.removeItem("logueado");
     localStorage.removeItem("token");
     localStorage.removeItem("usuarioId");
     localStorage.removeItem("usuario");
     localStorage.removeItem("email");
+    clearTimeout(temporizadorInactividad);
+    clearTimeout(temporizadorCierreInactividad);
+    ocultarAvisoInactividad();
 
     if (salirAplicacion) {
 
@@ -2285,11 +2441,13 @@ if (usuarioRecordado || emailRecordado) {
 if (new URLSearchParams(location.search).get("reset")) {
     document.getElementById("modalNuevaPassword").classList.add("mostrar");
 }
-
 // --- EXPORTAR FUNCIONES AL HTML ---
 // Esto permite que los onclick="" del HTML sigan funcionando como antes
 
 window.login = login;
+window.entrarConBiometria = entrarConBiometria;
+window.continuarSesion = continuarSesion;
+window.cerrarSesionPorInactividad = cerrarSesionPorInactividad;
 window.abrirRecuperarPassword = abrirRecuperarPassword;
 window.cerrarRecuperarPassword = cerrarRecuperarPassword;
 window.solicitarRecuperacionPassword = solicitarRecuperacionPassword;

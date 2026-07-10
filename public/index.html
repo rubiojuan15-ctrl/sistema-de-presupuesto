@@ -51,6 +51,7 @@
 
                 <div class="login-actions">
                     <button class="button button-primary" type="button" onclick="login()">Entrar</button>
+                    <button id="btnBiometria" class="button button-secondary biometric-login" type="button" onclick="entrarConBiometria()" hidden>Entrar con biometría</button>
                     <button class="button button-secondary" type="button" onclick="registrarse()">Crear cuenta</button>
                 </div>
 
@@ -417,6 +418,16 @@
     </div>
 
 </div>
+<div id="modalInactividad" class="modal-logout" role="dialog" aria-modal="true">
+    <div class="modal-logout-contenido">
+        <h2>La sesión está por expirar por inactividad.</h2>
+        <p class="modal-copy">Tenés 60 segundos para continuar trabajando.</p>
+        <div class="modal-logout-botones">
+            <button class="btn-volver" type="button" onclick="continuarSesion()">Continuar</button>
+            <button class="btn-salir" type="button" onclick="cerrarSesionPorInactividad()">Cerrar sesión</button>
+        </div>
+    </div>
+</div>
 <div id="modalAcciones" class="modal-logout">
 
     <div class="modal-logout-contenido">
@@ -485,6 +496,6 @@
 </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" src="app.js?v=password-reset"></script>
+    <script type="module" src="app.js?v=auth-performance-idle"></script>
 </body>
 </html>

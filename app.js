@@ -32,6 +32,15 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+app.use((req, res, next) => {
+    const etiqueta = `backend:request:${req.method}:${req.originalUrl}:${Date.now()}`;
+    console.time(etiqueta);
+    res.on("finish", () => {
+        console.timeEnd(etiqueta);
+    });
+    next();
+});
+
 app.use(authRoutes);
 app.use("/presupuestos", presupuestosRoutes);
 app.use("/gastos", gastosRoutes);
