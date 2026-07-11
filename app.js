@@ -6,6 +6,12 @@ const PDFDocument = require("pdfkit");
 const cors = require("cors");
 require("dotenv").config();
 
+const OpenAI = require("openai");
+
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+});
+
 const pool = require("./database/postgres");
 const ensureSchema = require("./database/schema");
 const auth = require("./middlewares/auth");
@@ -206,7 +212,26 @@ app.use((error, _req, res, _next) => {
     }
     res.status(500).send("Error interno");
 });
+app.get("/ia/test", async (req, res) => {
+    try {
 
+        const respuesta = await openai.responses.create({
+            model: "gpt-5.5",
+            input: "Respondé únicamente con la palabra HOLA"
+        });
+
+        res.json(respuesta);
+
+    } catch (e) {
+
+        console.error(e);
+
+        res.status(500).json({
+            error: e.message
+        });
+
+    }
+});
 async function start() {
     await ensureSchema();
     return app.listen(port, () => {
