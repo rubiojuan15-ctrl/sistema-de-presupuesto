@@ -8,6 +8,29 @@ require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 const geminiApiKey = process.env.GEMINI_API_KEY || process.env.Gemini_API_Key;
 const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
+const presupuestoJsonSchema = {
+    type: "object",
+    properties: {
+        trabajo: { type: "string" },
+        materiales: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    descripcion: { type: "string" },
+                    cantidad: { type: "number" },
+                    precioUnitario: { type: "number" },
+                    subtotal: { type: "number" }
+                },
+                required: ["descripcion", "cantidad", "precioUnitario", "subtotal"]
+            }
+        },
+        manoDeObra: { type: "number" },
+        total: { type: "number" },
+        observaciones: { type: "string" }
+    },
+    required: ["trabajo", "materiales", "manoDeObra", "total", "observaciones"]
+};
 
 
 const pool = require("./database/postgres");
@@ -69,8 +92,11 @@ app.post("/ia/presupuesto", auth, async (req, res) => {
     try {
         const respuesta = await ai.models.generateContent({
             model: "gemini-3.5-flash",
-            contents: `Genera un presupuesto detallado para la siguiente descripcion. Responde exclusivamente con un objeto JSON valido, sin Markdown ni texto adicional. Incluye trabajo, materiales (una lista), manoDeObra, total y observaciones. Usa numeros para los importes.\n\nDescripcion: ${descripcion}`,
-            config: { responseMimeType: "application/json" }
+            contents: `Genera un presupuesto detallado para la siguiente descripcion. Usa importes numericos y no inventes informacion que no se desprenda de la descripcion.\n\nDescripcion: ${descripcion}`,
+            config: {
+                responseMimeType: "application/json",
+                responseJsonSchema: presupuestoJsonSchema
+            }
         });
         const presupuesto = JSON.parse(respuesta.text);
 
