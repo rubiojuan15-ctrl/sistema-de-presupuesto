@@ -2631,7 +2631,10 @@ if (new URLSearchParams(location.search).get("reset")) {
     document.getElementById("modalNuevaPassword").classList.add("mostrar");
 }
 async function generarPresupuestoIA(datos) {
-    const response = await fetch("/ia/presupuesto", {
+    const urlIA = window.Capacitor?.isNativePlatform?.()
+        ? API + "/ia/presupuesto"
+        : "/ia/presupuesto";
+    const response = await fetch(urlIA, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -2639,10 +2642,14 @@ async function generarPresupuestoIA(datos) {
         },
         body: JSON.stringify({ descripcion: datos })
     });
-    const resultado = await response.json();
+    const esJson = response.headers.get("content-type")?.includes("application/json");
+    const resultado = esJson ? await response.json() : null;
 
     if (!response.ok) {
-        throw new Error(resultado.error || "No se pudo generar el presupuesto");
+        throw new Error(resultado?.error || "El servidor no devolvió una respuesta válida");
+    }
+    if (!resultado) {
+        throw new Error("El servidor no devolvió una respuesta JSON válida");
     }
 
     return resultado;
