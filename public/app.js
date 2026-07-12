@@ -528,6 +528,7 @@ function limpiarFormulario() {
     direccion.value = "";
     trabajo.value = "";
     observaciones.value = "";
+    document.getElementById("descripcionIA").value = "";
     fechaVencimiento.value = "";
 
     materiales.value = "";
@@ -2646,6 +2647,56 @@ async function generarPresupuestoIA(datos) {
 
     return resultado;
 }
+
+function formatearMaterialesIA(materialesGenerados) {
+    return materialesGenerados.map((material) => {
+        const cantidad = Number(material.cantidad) || 0;
+        const precioUnitario = Number(material.precioUnitario) || 0;
+        const subtotal = Number(material.subtotal) || (cantidad * precioUnitario);
+        return `- ${material.descripcion}: ${cantidad} x $${precioUnitario} = $${subtotal}`;
+    }).join("\n");
+}
+
+async function generarPresupuestoConIA() {
+    const descripcionIA = document.getElementById("descripcionIA");
+    const botonGenerarIA = document.getElementById("botonGenerarIA");
+    const descripcion = descripcionIA.value.trim();
+
+    if (!descripcion) {
+        mostrarNotificacion("Describí el trabajo antes de generar el presupuesto");
+        descripcionIA.focus();
+        return;
+    }
+
+    botonGenerarIA.disabled = true;
+    botonGenerarIA.textContent = "Generando...";
+
+    try {
+        const presupuesto = await generarPresupuestoIA(descripcion);
+        const materialesGenerados = Array.isArray(presupuesto.materiales) ? presupuesto.materiales : [];
+        const totalMateriales = materialesGenerados.reduce((acumulado, material) => {
+            const subtotal = Number(material.subtotal);
+            const calculado = (Number(material.cantidad) || 0) * (Number(material.precioUnitario) || 0);
+            return acumulado + (Number.isFinite(subtotal) ? subtotal : calculado);
+        }, 0);
+
+        trabajo.value = presupuesto.trabajo || "";
+        materiales.value = totalMateriales;
+        manoDeObra.value = Number(presupuesto.manoDeObra) || 0;
+        observaciones.value = [
+            presupuesto.observaciones,
+            materialesGenerados.length ? `Materiales sugeridos:\n${formatearMaterialesIA(materialesGenerados)}` : ""
+        ].filter(Boolean).join("\n\n");
+        calcularTotal();
+        mostrarNotificacion("Sugerencia generada. Revisá los importes antes de guardar.");
+    } catch (error) {
+        console.error("Error al generar la sugerencia de presupuesto:", error);
+        mostrarNotificacion(error.message || "No se pudo generar el presupuesto");
+    } finally {
+        botonGenerarIA.disabled = false;
+        botonGenerarIA.textContent = "Generar con IA";
+    }
+}
 // --- EXPORTAR FUNCIONES AL HTML ---
 // Esto permite que los onclick="" del HTML sigan funcionando como antes
 
@@ -2685,3 +2736,4 @@ window.verHistorial = verHistorial;
 window.descargarPDF = descargarPDF;
 window.enviarWhatsApp = enviarWhatsApp;
 window.cerrarModalAcciones = cerrarModalAcciones;
+window.generarPresupuestoConIA = generarPresupuestoConIA;
