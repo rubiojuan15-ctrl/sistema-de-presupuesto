@@ -5,12 +5,11 @@ const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
 const cors = require("cors");
 require("dotenv").config();
+import { GoogleGenAI } from "@google/genai";
 
-const OpenAI = require("openai");
+// Inicializa con tu variable de entorno de Render
+const ai = new GoogleGenAI({ apiKey: process.env.Gemini_API_Key });
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
 
 const pool = require("./database/postgres");
 const ensureSchema = require("./database/schema");

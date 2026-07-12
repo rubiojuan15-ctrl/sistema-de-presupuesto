@@ -50,12 +50,16 @@ function token() {
 
 }
 
-const INACTIVIDAD_MS = 10 * 60 * 1000;
+const INACTIVIDAD_MS = 15 * 60 * 1000;
 const AVISO_INACTIVIDAD_MS = 60 * 1000;
 let temporizadorInactividad = null;
 let temporizadorCierreInactividad = null;
 let avisoInactividadActivo = false;
 let contadorMediciones = 0;
+let pullInicioY = 0;
+let pullActivo = false;
+let pullListo = false;
+let pullActualizando = false;
 
 function iniciarMedicion(nombre) {
     const etiqueta = `${nombre} #${++contadorMediciones}`;
@@ -82,15 +86,19 @@ function haySesionGuardada() {
     return Boolean(localStorage.getItem("token") && localStorage.getItem("usuarioId"));
 }
 
+function cargarDatos(origen = "manual") {
+    const fin = iniciarMedicion(`frontend:${origen}:carga-datos-total`);
+    return Promise.allSettled([
+        cargarPresupuestos(),
+        cargarResumenGastos(),
+        cargarGastos(),
+        cargarResumenMensual()
+    ]).finally(fin);
+}
+
 function cargarDatosEnSegundoPlano(origen = "login") {
     const iniciarCarga = () => {
-        const fin = iniciarMedicion(`frontend:${origen}:carga-datos-total`);
-        Promise.allSettled([
-            cargarPresupuestos(),
-            cargarResumenGastos(),
-            cargarGastos(),
-            cargarResumenMensual()
-        ]).finally(fin);
+        cargarDatos(origen);
     };
 
     if ("requestIdleCallback" in window) {
@@ -99,6 +107,134 @@ function cargarDatosEnSegundoPlano(origen = "login") {
     }
 
     setTimeout(iniciarCarga, 0);
+}
+
+function obtenerIndicadorPull() {
+    let indicador = document.getElementById("pullRefreshIndicador");
+    if (indicador) return indicador;
+
+    indicador = document.createElement("div");
+    indicador.id = "pullRefreshIndicador";
+    indicador.className = "pull-refresh-indicator";
+    indicador.textContent = "Deslizá para actualizar";
+    document.body.appendChild(indicador);
+    return indicador;
+}
+
+function ocultarIndicadorPull() {
+    pullActivo = false;
+    pullListo = false;
+    pullActualizando = false;
+    document.body.classList.remove("pull-refresh-visible", "pull-refresh-ready", "pull-refresh-loading");
+
+    const indicador = document.getElementById("pullRefreshIndicador");
+    if (indicador) {
+        indicador.textContent = "Deslizá para actualizar";
+    }
+}
+
+function pantallaLoginVisible() {
+    const login = document.getElementById("login");
+    return Boolean(login && getComputedStyle(login).display !== "none");
+}
+
+function hayModalAbierto() {
+    return Boolean(document.querySelector(".modal-logout.mostrar"));
+}
+
+function sistemaVisible() {
+    const sistema = document.getElementById("sistema");
+    return Boolean(
+        sistema &&
+        getComputedStyle(sistema).display !== "none" &&
+        !pantallaLoginVisible()
+    );
+}
+
+function puedeIniciarActualizacionPorDeslizamiento(evento) {
+    const objetivo = evento.target;
+    return (
+        sesionAutenticada() &&
+        sistemaVisible() &&
+        !hayModalAbierto() &&
+        window.scrollY <= 0 &&
+        !pullActualizando &&
+        !avisoInactividadActivo &&
+        !objetivo.closest?.("input, textarea, select, button, .modal-logout")
+    );
+}
+
+async function refrescarPorDeslizamiento() {
+    if (!sesionAutenticada() || !sistemaVisible() || hayModalAbierto()) {
+        ocultarIndicadorPull();
+        return;
+    }
+
+    pullActualizando = true;
+    const indicador = obtenerIndicadorPull();
+    indicador.textContent = "Actualizando...";
+    document.body.classList.add("pull-refresh-loading");
+
+    try {
+        await cargarDatos("pull-to-refresh");
+        mostrarNotificacion("Datos actualizados");
+    } finally {
+        pullActualizando = false;
+        pullListo = false;
+        document.body.classList.remove("pull-refresh-visible", "pull-refresh-ready", "pull-refresh-loading");
+        indicador.textContent = "Deslizá para actualizar";
+    }
+}
+
+function configurarActualizacionPorDeslizamiento() {
+    obtenerIndicadorPull();
+
+    window.addEventListener("touchstart", evento => {
+        if (evento.touches.length !== 1 || !puedeIniciarActualizacionPorDeslizamiento(evento)) return;
+        pullInicioY = evento.touches[0].clientY;
+        pullActivo = true;
+        pullListo = false;
+    }, { passive: true });
+
+    window.addEventListener("touchmove", evento => {
+        if (!pullActivo || evento.touches.length !== 1) return;
+        if (!puedeIniciarActualizacionPorDeslizamiento(evento)) {
+            ocultarIndicadorPull();
+            return;
+        }
+
+
+        const distancia = evento.touches[0].clientY - pullInicioY;
+        if (distancia < 20) return;
+
+        document.body.classList.add("pull-refresh-visible");
+        const indicador = obtenerIndicadorPull();
+
+        if (distancia >= 90) {
+            pullListo = true;
+            indicador.textContent = "Soltá para actualizar";
+            document.body.classList.add("pull-refresh-ready");
+        } else {
+            pullListo = false;
+            indicador.textContent = "Deslizá para actualizar";
+            document.body.classList.remove("pull-refresh-ready");
+        }
+
+        evento.preventDefault();
+    }, { passive: false });
+
+    window.addEventListener("touchend", () => {
+        if (!pullActivo) return;
+
+        pullActivo = false;
+        if (pullListo) {
+            refrescarPorDeslizamiento();
+            return;
+        }
+
+        pullListo = false;
+        document.body.classList.remove("pull-refresh-visible", "pull-refresh-ready");
+    }, { passive: true });
 }
 
 function mostrarSistemaAutenticado(origen = "login") {
@@ -282,6 +418,65 @@ async function actualizarMenuUsuario() {
             avatarElemento.src = "avatar.png";
         }
     }
+}
+
+async function avatarPorEmail(emailUsuario) {
+    if (!emailUsuario) return "avatar.png";
+
+    try {
+        const datosEmail = new TextEncoder().encode(emailUsuario.trim().toLowerCase());
+        const hashBuffer = await crypto.subtle.digest("SHA-256", datosEmail);
+        const hash = Array.from(new Uint8Array(hashBuffer))
+            .map(byte => byte.toString(16).padStart(2, "0"))
+            .join("");
+        return `https://www.gravatar.com/avatar/${hash}?s=160&d=mp`;
+    } catch (error) {
+        return "avatar.png";
+    }
+}
+
+async function actualizarLoginRecordado() {
+    const usuarioGuardado = localStorage.getItem("usuarioRecordado") || localStorage.getItem("usuario") || "";
+    const emailGuardado = localStorage.getItem("emailRecordado") || localStorage.getItem("email") || "";
+    const hayUsuario = Boolean(usuarioGuardado || emailGuardado);
+
+    const perfil = document.getElementById("loginPerfilRecordado");
+    const identidad = document.getElementById("loginIdentidadCampos");
+    const cambiar = document.getElementById("cambiarUsuarioLogin");
+    const crearCuenta = document.getElementById("crearCuentaLogin");
+    const nombre = document.getElementById("loginNombreRecordado");
+    const emailTexto = document.getElementById("loginEmailRecordado");
+    const avatar = document.getElementById("loginAvatar");
+
+    if (perfil) perfil.hidden = !hayUsuario;
+    if (identidad) identidad.hidden = hayUsuario;
+    if (cambiar) cambiar.hidden = !hayUsuario;
+    if (crearCuenta) crearCuenta.hidden = hayUsuario;
+    if (recordarme) recordarme.checked = hayUsuario;
+
+    if (!hayUsuario) return;
+
+    if (usuarioGuardado) usuario.value = usuarioGuardado;
+    if (emailGuardado) email.value = emailGuardado;
+    if (nombre) nombre.textContent = usuarioGuardado || emailGuardado;
+    if (emailTexto) emailTexto.textContent = emailGuardado;
+    if (avatar) avatar.src = await avatarPorEmail(emailGuardado);
+}
+
+function cambiarUsuarioLogin() {
+    localStorage.removeItem("usuarioRecordado");
+    localStorage.removeItem("emailRecordado");
+    usuario.value = "";
+    email.value = "";
+    password.value = "";
+    recordarme.checked = false;
+    actualizarLoginRecordado();
+    usuario.focus();
+}
+
+function togglePasswordLogin() {
+    const visible = password.type === "text";
+    password.type = visible ? "password" : "text";
 }
 
 sincronizarTemaSistema();
@@ -2423,13 +2618,7 @@ function cerrarModalAcciones() {
         modal.classList.remove("mostrar");
     }
 }
-/*PullToRefresh.init({
-    mainElement: ".content-stack",
-
-    onRefresh() {
-        return cargarPresupuestos();
-    }
-});*/
+configurarActualizacionPorDeslizamiento();
 const usuarioRecordado = localStorage.getItem("usuarioRecordado") || "";
 const emailRecordado = localStorage.getItem("emailRecordado") || "";
 if (usuarioRecordado || emailRecordado) {
@@ -2437,9 +2626,22 @@ if (usuarioRecordado || emailRecordado) {
     email.value = emailRecordado;
     document.getElementById("recordarme").checked = true;
 }
-
 if (new URLSearchParams(location.search).get("reset")) {
     document.getElementById("modalNuevaPassword").classList.add("mostrar");
+}
+async function generarPresupuestoIA(datos) {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Generá un presupuesto detallado para: ${datos}`,
+    });
+
+    // El resultado final se extrae de response.text
+    return response.text; 
+  } catch (error) {
+    console.error("Error con Gemini:", error);
+    throw error;
+  }
 }
 // --- EXPORTAR FUNCIONES AL HTML ---
 // Esto permite que los onclick="" del HTML sigan funcionando como antes
