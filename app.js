@@ -6,8 +6,8 @@ const PDFDocument = require("pdfkit");
 const cors = require("cors");
 require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
-// Inicializa con tu variable de entorno de Render
-const ai = new GoogleGenAI({ apiKey: process.env.Gemini_API_Key });
+const geminiApiKey = process.env.GEMINI_API_KEY || process.env.Gemini_API_Key;
+const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
 
 const pool = require("./database/postgres");
@@ -48,6 +48,42 @@ app.use((req, res, next) => {
 app.use(authRoutes);
 app.use("/presupuestos", presupuestosRoutes);
 app.use("/gastos", gastosRoutes);
+
+app.post("/ia/presupuesto", auth, async (req, res) => {
+    const descripcion = typeof req.body?.descripcion === "string"
+        ? req.body.descripcion.trim()
+        : "";
+
+    if (!descripcion) {
+        return res.status(400).json({ error: "La descripcion es obligatoria" });
+    }
+
+    if (descripcion.length > 4_000) {
+        return res.status(400).json({ error: "La descripcion no puede superar los 4000 caracteres" });
+    }
+
+    if (!ai) {
+        return res.status(503).json({ error: "El servicio de IA no esta configurado" });
+    }
+
+    try {
+        const respuesta = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `Genera un presupuesto detallado para la siguiente descripcion. Responde exclusivamente con un objeto JSON valido, sin Markdown ni texto adicional. Incluye trabajo, materiales (una lista), manoDeObra, total y observaciones. Usa numeros para los importes.\n\nDescripcion: ${descripcion}`,
+            config: { responseMimeType: "application/json" }
+        });
+        const presupuesto = JSON.parse(respuesta.text);
+
+        if (!presupuesto || Array.isArray(presupuesto) || typeof presupuesto !== "object") {
+            throw new Error("Gemini no devolvio un objeto JSON");
+        }
+
+        return res.json(presupuesto);
+    } catch (error) {
+        console.error("Error al generar el presupuesto con Gemini:", error);
+        return res.status(502).json({ error: "No se pudo generar el presupuesto" });
+    }
+});
 
 app.get("/presupuestos/generar-pdf/:id", auth, async (req, res) => {
     try {
@@ -210,10 +246,11 @@ app.use((error, _req, res, _next) => {
     }
     res.status(500).send("Error interno");
 });
-app.get("/ia/test", async (req, res) => {
+/* Ruta de prueba de la integracion anterior retirada.
+// El endpoint de prueba anterior fue eliminado.
     try {
 
-        const respuesta = await openai.responses.create({
+        const respuesta = await proveedorAnterior.responses.create({
             model: "gpt-5.5",
             input: "Respondé únicamente con la palabra HOLA"
         });
@@ -230,6 +267,7 @@ app.get("/ia/test", async (req, res) => {
 
     }
 });
+*/
 async function start() {
     await ensureSchema();
     return app.listen(port, () => {

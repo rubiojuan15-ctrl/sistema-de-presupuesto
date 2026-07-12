@@ -27,7 +27,6 @@
     "express": "latest",
     "jsonwebtoken": "latest",
     "multer": "latest",
-    "openai": "^6.46.0",
     "pdfkit": "latest",
     "pg": "^8.22.0",
     "sqlite3": "latest"

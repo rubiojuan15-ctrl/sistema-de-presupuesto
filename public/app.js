@@ -2630,18 +2630,21 @@ if (new URLSearchParams(location.search).get("reset")) {
     document.getElementById("modalNuevaPassword").classList.add("mostrar");
 }
 async function generarPresupuestoIA(datos) {
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `Generá un presupuesto detallado para: ${datos}`,
+    const response = await fetch("/ia/presupuesto", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            authorization: token()
+        },
+        body: JSON.stringify({ descripcion: datos })
     });
+    const resultado = await response.json();
 
-    // El resultado final se extrae de response.text
-    return response.text; 
-  } catch (error) {
-    console.error("Error con Gemini:", error);
-    throw error;
-  }
+    if (!response.ok) {
+        throw new Error(resultado.error || "No se pudo generar el presupuesto");
+    }
+
+    return resultado;
 }
 // --- EXPORTAR FUNCIONES AL HTML ---
 // Esto permite que los onclick="" del HTML sigan funcionando como antes
