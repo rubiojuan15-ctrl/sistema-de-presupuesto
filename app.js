@@ -68,7 +68,7 @@ app.post("/ia/presupuesto", auth, async (req, res) => {
 
     try {
         const respuesta = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: `Genera un presupuesto detallado para la siguiente descripcion. Responde exclusivamente con un objeto JSON valido, sin Markdown ni texto adicional. Incluye trabajo, materiales (una lista), manoDeObra, total y observaciones. Usa numeros para los importes.\n\nDescripcion: ${descripcion}`,
             config: { responseMimeType: "application/json" }
         });
