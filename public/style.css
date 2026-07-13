@@ -2008,6 +2008,80 @@ td img:hover {
 .auth-modal-content label { display: block; margin: 14px 0 6px; }
 .auth-modal-content input { width: 100%; }
 
+.registro-modal-content {
+    max-width: 480px;
+}
+
+.registro-usuario-sugerido {
+    margin: 7px 0 2px;
+    color: var(--ink-soft);
+    font-size: 13px;
+}
+
+.registro-usuario-sugerido strong {
+    color: var(--brand-dark);
+    font-weight: 800;
+}
+
+.password-input-wrap {
+    position: relative;
+}
+
+.password-input-wrap input {
+    padding-right: 52px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    display: grid;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0;
+    place-items: center;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 0;
+    border-radius: 9px;
+    transform: translateY(-50%);
+}
+
+.password-toggle:active,
+.password-toggle[aria-pressed="true"] {
+    color: var(--brand-dark);
+    background: var(--brand-soft);
+}
+
+.password-requirements {
+    display: grid;
+    gap: 5px;
+    margin: 9px 0 2px;
+    padding: 0;
+    list-style: none;
+    color: var(--ink-soft);
+    font-size: 12px;
+}
+
+.password-requirements li::before {
+    content: "○";
+    display: inline-block;
+    width: 19px;
+    color: var(--ink-soft);
+    font-weight: 800;
+}
+
+.password-requirements li.cumplido {
+    color: var(--green);
+}
+
+.password-requirements li.cumplido::before {
+    content: "✓";
+    color: var(--green);
+}
+
 @media (max-width: 420px) {
     .login-options { align-items: flex-start; flex-direction: column; }
 }

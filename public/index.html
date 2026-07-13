@@ -101,11 +101,12 @@
                     </div>
                 </div>
                 <p class="login-hint">Podés entrar con tu email o con tu usuario.</p>
+                <button id="btnReenviarVerificacion" class="forgot-password" type="button" onclick="reenviarVerificacion()" hidden>Reenviar email de verificación</button>
 
                 <div class="login-actions">
                     <button class="button button-primary" type="button" onclick="login()">Entrar</button>
                     <button id="btnBiometria" class="button button-secondary biometric-login" type="button" onclick="entrarConBiometria()" hidden>Entrar con biometría</button>
-                    <button class="button button-secondary" type="button" onclick="registrarse()">Crear cuenta</button>
+                    <button class="button button-secondary" type="button" onclick="abrirRegistro()">Crear cuenta</button>
                 </div>
 
                 <a class="android-download" href="/downloads/presupuestos-android.apk" download>
@@ -425,6 +426,44 @@
     </div>
 
     <div id="notificacion" role="status" aria-live="polite"></div>
+    <div id="modalRegistro" class="modal-logout" role="dialog" aria-modal="true" aria-labelledby="registroTitulo">
+        <div class="modal-logout-contenido auth-modal-content registro-modal-content">
+            <h2 id="registroTitulo">Crear cuenta</h2>
+            <p class="modal-copy">Usá tu nombre real: generaremos un usuario único para que también puedas iniciar sesión con él.</p>
+
+            <label for="nombreRegistro">Nombre y apellido</label>
+            <input type="text" id="nombreRegistro" placeholder="Juan Pérez" autocomplete="name" maxlength="80" oninput="actualizarUsuarioSugerido()">
+            <p class="registro-usuario-sugerido">Tu usuario será: <strong id="usuarioSugeridoRegistro">—</strong></p>
+
+            <label for="emailRegistro">Email</label>
+            <input type="email" id="emailRegistro" placeholder="tu@email.com" autocomplete="email" required>
+
+            <label for="passwordRegistro">Contraseña</label>
+            <div class="password-input-wrap">
+                <input type="password" id="passwordRegistro" autocomplete="new-password" minlength="8" oninput="actualizarSeguridadRegistro()">
+                <button class="password-toggle" type="button" aria-label="Mostrar contraseña" onclick="alternarVisibilidadPassword('passwordRegistro', this)">👁️</button>
+            </div>
+            <ul class="password-requirements" aria-live="polite">
+                <li id="requisitoLongitud">Mínimo 8 caracteres.</li>
+                <li id="requisitoMayuscula">Una mayúscula.</li>
+                <li id="requisitoMinuscula">Una minúscula.</li>
+                <li id="requisitoNumero">Un número.</li>
+                <li id="requisitoSimbolo">Un símbolo.</li>
+            </ul>
+
+            <label for="confirmarPasswordRegistro">Confirmar contraseña</label>
+            <div class="password-input-wrap">
+                <input type="password" id="confirmarPasswordRegistro" autocomplete="new-password" minlength="8">
+                <button class="password-toggle" type="button" aria-label="Mostrar contraseña" onclick="alternarVisibilidadPassword('confirmarPasswordRegistro', this)">👁️</button>
+            </div>
+            <p id="errorRegistro" class="modal-error" aria-live="polite"></p>
+
+            <div class="modal-logout-botones">
+                <button class="btn-volver" type="button" onclick="cerrarRegistro()">Volver</button>
+                <button class="btn-salir" type="button" onclick="registrarse()">Crear cuenta</button>
+            </div>
+        </div>
+    </div>
     <div id="modalRecuperarPassword" class="modal-logout" role="dialog" aria-modal="true">
         <div class="modal-logout-contenido auth-modal-content">
             <h2>Recuperar contraseña</h2>

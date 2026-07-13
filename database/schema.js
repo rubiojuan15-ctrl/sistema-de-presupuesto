@@ -78,12 +78,19 @@ async function ensureSchema(client = pool) {
 
     await client.query(`
         ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email TEXT;
+        ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS emailverificado BOOLEAN NOT NULL DEFAULT TRUE;
+        ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS emailverificaciontoken TEXT;
+        ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS emailverificacionexpira TIMESTAMP;
     `);
 
     await client.query(`
         CREATE UNIQUE INDEX IF NOT EXISTS usuarios_email_idx
             ON usuarios (LOWER(email))
             WHERE email IS NOT NULL;
+
+        CREATE UNIQUE INDEX IF NOT EXISTS usuarios_email_verificacion_token_idx
+            ON usuarios (emailverificaciontoken)
+            WHERE emailverificaciontoken IS NOT NULL;
     `);
 }
 

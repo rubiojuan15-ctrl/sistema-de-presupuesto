@@ -60,6 +60,8 @@ let pullInicioY = 0;
 let pullActivo = false;
 let pullListo = false;
 let pullActualizando = false;
+let temporizadorUsuarioSugerido = null;
+let consultaUsuarioSugerido = 0;
 
 function iniciarMedicion(nombre) {
     const etiqueta = `${nombre} #${++contadorMediciones}`;
@@ -1140,7 +1142,7 @@ document.getElementById("facturacionMes").textContent = "$" +
                 $${Number(p.total).toLocaleString("es-AR")}
             </td>
 
-            <td class="budget-card-deposit" data-label="SeÃ±a">
+            <td class="budget-card-deposit" data-label="Seña">
                 $${Number(p.sena || 0).toLocaleString("es-AR")}
             </td>
 
@@ -1192,12 +1194,12 @@ document.getElementById("facturacionMes").textContent = "$" +
                     </option>
 
                     <option
-                        value="SeÃ±a"
-                        ${p.estado === "SeÃ±a"
+                        value="Seña"
+                        ${p.estado === "Seña"
                             ? "selected"
                             : ""}
                     >
-                        SeÃ±a
+                        Seña
                     </option>
 
                     <option
@@ -1700,6 +1702,7 @@ async function login() {
 
     const finLogin = iniciarMedicion("frontend:login:total");
     const finFetch = iniciarMedicion("frontend:login:fetch");
+    document.getElementById("btnReenviarVerificacion").hidden = true;
     const respuesta =
         await fetch(API +"/login", {
 
@@ -1761,10 +1764,40 @@ async function login() {
         prepararBotonBiometria();
     } else {
 
-        alert(await respuesta.text() || "Usuario incorrecto");
+        const contenido = await respuesta.text();
+        let detalle = {};
+        try {
+            detalle = JSON.parse(contenido);
+        } catch (_) {
+            // Algunas respuestas existentes del servidor son texto plano.
+        }
+
+        if (detalle.code === "EMAIL_NO_VERIFICADO") {
+            if (detalle.email) email.value = detalle.email;
+            document.getElementById("btnReenviarVerificacion").hidden = false;
+            mostrarNotificacion(detalle.mensaje);
+        } else {
+            alert(detalle.mensaje || contenido || "Usuario incorrecto");
+        }
 
     }
     finLogin();
+}
+
+async function reenviarVerificacion() {
+    const emailVerificacion = email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVerificacion)) {
+        mostrarNotificacion("Ingresá el email de la cuenta para reenviar la verificación.");
+        return;
+    }
+
+    const respuesta = await fetch(API + "/reenviar-verificacion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailVerificacion })
+    });
+    const mensaje = await respuesta.text();
+    mostrarNotificacion(mensaje || "No se pudo reenviar el email de verificación.");
 }
 function abrirRecuperarPassword() {
     document.getElementById("emailRecuperacion").value =
@@ -1808,50 +1841,149 @@ async function restablecerPassword() {
     mostrarNotificacion(mensaje + ". Ya podés iniciar sesión.");
 }
 
+function abrirRegistro() {
+    document.getElementById("modalRegistro").classList.add("mostrar");
+    document.getElementById("nombreRegistro").focus();
+}
+
+function cerrarRegistro() {
+    document.getElementById("modalRegistro").classList.remove("mostrar");
+    document.getElementById("errorRegistro").textContent = "";
+}
+
+function requisitosPassword(password) {
+    return [
+        password.length >= 8,
+        /[A-Z]/.test(password),
+        /[a-z]/.test(password),
+        /\d/.test(password),
+        /[^A-Za-z0-9]/.test(password)
+    ];
+}
+
+function actualizarSeguridadRegistro() {
+    const requisitos = requisitosPassword(document.getElementById("passwordRegistro").value);
+    const ids = [
+        "requisitoLongitud",
+        "requisitoMayuscula",
+        "requisitoMinuscula",
+        "requisitoNumero",
+        "requisitoSimbolo"
+    ];
+
+    ids.forEach((id, indice) => {
+        const item = document.getElementById(id);
+        item.classList.toggle("cumplido", requisitos[indice]);
+        item.setAttribute("aria-label", `${requisitos[indice] ? "Cumplido" : "Pendiente"}: ${item.textContent}`);
+    });
+}
+
+function normalizarUsuarioSugerido(nombre) {
+    return nombre
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ".")
+        .replace(/^\.+|\.+$/g, "")
+        .slice(0, 40);
+}
+
+function actualizarUsuarioSugerido() {
+    const nombre = document.getElementById("nombreRegistro").value;
+    const destino = document.getElementById("usuarioSugeridoRegistro");
+    const base = normalizarUsuarioSugerido(nombre);
+    const consultaActual = ++consultaUsuarioSugerido;
+    clearTimeout(temporizadorUsuarioSugerido);
+
+    if (base.length < 3) {
+        destino.textContent = "—";
+        return;
+    }
+
+    destino.textContent = base;
+    temporizadorUsuarioSugerido = setTimeout(async () => {
+        try {
+            const respuesta = await fetch(`${API}/registro/usuario-sugerido?nombre=${encodeURIComponent(nombre)}`);
+            const datos = await respuesta.json();
+            if (respuesta.ok && consultaActual === consultaUsuarioSugerido && datos.usuario) {
+                destino.textContent = datos.usuario;
+            }
+        } catch (error) {
+            console.warn("No se pudo actualizar el usuario sugerido", error);
+        }
+    }, 250);
+}
+
+function alternarVisibilidadPassword(idInput, boton) {
+    const input = document.getElementById(idInput);
+    const visible = input.type === "text";
+    input.type = visible ? "password" : "text";
+    boton.setAttribute("aria-label", visible ? "Mostrar contraseña" : "Ocultar contraseña");
+    boton.setAttribute("aria-pressed", String(!visible));
+}
+
 async function registrarse() {
-    const usuarioVal = usuario.value.trim();
-    const emailVal = email.value.trim();
-    const passwordVal = password.value;
+    const nombre = document.getElementById("nombreRegistro").value.trim();
+    const emailVal = document.getElementById("emailRegistro").value.trim();
+    const passwordVal = document.getElementById("passwordRegistro").value;
+    const confirmarPassword = document.getElementById("confirmarPasswordRegistro").value;
+    const errorRegistro = document.getElementById("errorRegistro");
+    errorRegistro.textContent = "";
 
-    if (usuarioVal.length < 3) {
-        alert("El usuario debe tener al menos 3 caracteres");
+    if (nombre.length < 3) {
+        errorRegistro.textContent = "Ingresá tu nombre y apellido.";
         return;
     }
 
-    if (passwordVal.length < 6) {
-        alert("La contraseÃ±a debe tener al menos 6 caracteres");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+        errorRegistro.textContent = "Ingresá un email válido.";
         return;
     }
 
-    if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
-        alert("IngresÃ¡ un email vÃ¡lido");
+    if (requisitosPassword(passwordVal).some(requisito => !requisito)) {
+        errorRegistro.textContent = "La contraseña no cumple todos los requisitos.";
+        return;
+    }
+
+    if (passwordVal !== confirmarPassword) {
+        errorRegistro.textContent = "Las contraseñas no coinciden.";
         return;
     }
 
     try {
         const respuesta = await fetch(API + "/registro", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                usuario: usuarioVal,
+                nombre,
                 email: emailVal,
-                password: passwordVal
+                password: passwordVal,
+                confirmarPassword
             })
         });
+        const contenido = await respuesta.text();
+        let datos = {};
+        try {
+            datos = JSON.parse(contenido);
+        } catch (_) {
+            // Las respuestas de error existentes del servidor son texto plano.
+        }
 
-        const mensaje = await respuesta.text();
-
-        if (respuesta.ok) {
-            alert("Usuario creado. Ahora podÃ©s iniciar sesiÃ³n.");
+        if (!respuesta.ok) {
+            errorRegistro.textContent = datos.mensaje || contenido || "No se pudo crear la cuenta.";
             return;
         }
 
-        alert(mensaje || "No se pudo crear el usuario");
+        cerrarRegistro();
+        document.getElementById("email").value = emailVal;
+        document.getElementById("usuario").value = datos.usuario || "";
+        document.getElementById("password").value = "";
+        document.getElementById("btnReenviarVerificacion").hidden = false;
+        mostrarNotificacion(`${datos.mensaje || "Cuenta creada."} Tu usuario es: ${datos.usuario}`);
     } catch (error) {
         console.error(error);
-        alert("No se pudo conectar con el servidor");
+        errorRegistro.textContent = "No se pudo conectar con el servidor.";
     }
 }
 if (sesionAutenticada()) {
@@ -2713,6 +2845,7 @@ async function generarPresupuestoConIA() {
 // Esto permite que los onclick="" del HTML sigan funcionando como antes
 
 window.login = login;
+window.reenviarVerificacion = reenviarVerificacion;
 window.entrarConBiometria = entrarConBiometria;
 window.continuarSesion = continuarSesion;
 window.cerrarSesionPorInactividad = cerrarSesionPorInactividad;
@@ -2720,6 +2853,11 @@ window.abrirRecuperarPassword = abrirRecuperarPassword;
 window.cerrarRecuperarPassword = cerrarRecuperarPassword;
 window.solicitarRecuperacionPassword = solicitarRecuperacionPassword;
 window.restablecerPassword = restablecerPassword;
+window.abrirRegistro = abrirRegistro;
+window.cerrarRegistro = cerrarRegistro;
+window.actualizarSeguridadRegistro = actualizarSeguridadRegistro;
+window.actualizarUsuarioSugerido = actualizarUsuarioSugerido;
+window.alternarVisibilidadPassword = alternarVisibilidadPassword;
 window.registrarse = registrarse;
 window.logout = logout;
 window.guardarPresupuesto = guardarPresupuesto;

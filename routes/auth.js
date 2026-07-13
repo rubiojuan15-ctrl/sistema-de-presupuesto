@@ -17,6 +17,78 @@ function isValidEmail(email) {
     return EMAIL_RE.test(email);
 }
 
+function isStrongPassword(password) {
+    return password.length >= 8 &&
+        /[A-Z]/.test(password) &&
+        /[a-z]/.test(password) &&
+        /\d/.test(password) &&
+        /[^A-Za-z0-9]/.test(password);
+}
+
+function baseUsuarioDesdeNombre(nombre) {
+    return String(nombre || "")
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ".")
+        .replace(/^\.+|\.+$/g, "")
+        .slice(0, 40);
+}
+
+async function generarUsuarioDisponible(nombre) {
+    const base = baseUsuarioDesdeNombre(nombre);
+    if (base.length < 3) return null;
+
+    const existentes = await pool.query(
+        "SELECT LOWER(usuario) AS usuario FROM usuarios WHERE LOWER(usuario) = $1 OR LOWER(usuario) LIKE $2",
+        [base, `${base}%`]
+    );
+    const ocupados = new Set(existentes.rows.map(row => row.usuario));
+
+    if (!ocupados.has(base)) return base;
+
+    let sufijo = 2;
+    while (ocupados.has(`${base}${sufijo}`)) sufijo += 1;
+    return `${base}${sufijo}`;
+}
+
+function crearTokenVerificacion() {
+    return crypto.randomBytes(32).toString("hex");
+}
+
+function fechaExpiracionVerificacion() {
+    return new Date(Date.now() + 24 * 60 * 60 * 1000);
+}
+
+function urlAplicacion() {
+    return (process.env.APP_URL || "https://sistema-de-presupuesto.onrender.com").replace(/\/$/, "");
+}
+
+async function enviarEmailVerificacion(email, token) {
+    const from = process.env.EMAIL_FROM || process.env.SENDGRID_FROM;
+    if (!process.env.SENDGRID_API_KEY || !from) {
+        throw new Error("Falta configurar SENDGRID_API_KEY y EMAIL_FROM");
+    }
+
+    const enlace = `${urlAplicacion()}/verificar-email?token=${encodeURIComponent(token)}`;
+    await mailer.send({
+        to: email,
+        from,
+        subject: "Verificá tu email",
+        html: `
+            <h2>Confirmá tu cuenta</h2>
+            <p>Para activar tu cuenta, verificá tu email dentro de las próximas 24 horas.</p>
+            <p><a href="${enlace}" style="display:inline-block;padding:12px 20px;color:#fff;background:#925f3d;border-radius:8px;text-decoration:none;font-weight:700">Verificar email</a></p>
+            <p>Si no creaste esta cuenta, podés ignorar este correo.</p>
+        `
+    });
+}
+
+function paginaVerificacion(titulo, mensaje) {
+    return `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><body style="margin:0;display:grid;min-height:100vh;place-items:center;background:#f3f1ea;font-family:system-ui,sans-serif;color:#17221d"><main style="max-width:420px;margin:24px;padding:32px;background:#fff;border-radius:20px;box-shadow:0 12px 36px rgba(0,0,0,.12);text-align:center"><h1 style="margin-top:0">${titulo}</h1><p>${mensaje}</p></main></body></html>`;
+}
+
 /*async function enviarEmailRecuperacion(email, token) {
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.EMAIL_FROM;
@@ -55,11 +127,11 @@ router.post("/login", async (req, res) => {
         console.time(`${medicionLogin}:postgres`);
         const resultado = email
             ? await pool.query(
-                  "SELECT id, usuario, email, password FROM usuarios WHERE LOWER(email) = $1",
+                  "SELECT id, usuario, email, password, emailverificado FROM usuarios WHERE LOWER(email) = $1",
                   [email]
               )
             : await pool.query(
-                  "SELECT id, usuario, email, password FROM usuarios WHERE usuario = $1",
+                  "SELECT id, usuario, email, password, emailverificado FROM usuarios WHERE usuario = $1",
                   [usuario]
               );
         console.timeEnd(`${medicionLogin}:postgres`);
@@ -71,6 +143,14 @@ router.post("/login", async (req, res) => {
 
         if (!row || !passwordCorrecta) {
             return res.status(401).send("Usuario o contraseña incorrectos");
+        }
+
+        if (!row.emailverificado) {
+            return res.status(403).json({
+                code: "EMAIL_NO_VERIFICADO",
+                email: row.email,
+                mensaje: "Verificá tu email para poder ingresar. Revisá tu correo o solicitá un nuevo enlace."
+            });
         }
 
         console.time(`${medicionLogin}:jwt`);
@@ -95,15 +175,39 @@ router.post("/login", async (req, res) => {
     }
 });
 
+router.get("/registro/usuario-sugerido", async (req, res) => {
+    const nombre = String(req.query.nombre || "").trim();
+
+    if (baseUsuarioDesdeNombre(nombre).length < 3) {
+        return res.json({ usuario: "" });
+    }
+
+    try {
+        const usuario = await generarUsuarioDisponible(nombre);
+        res.json({ usuario });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: "No se pudo generar el usuario" });
+    }
+});
+
 router.post("/registro", async (req, res) => {
-    const usuario = String(req.body.usuario || "").trim();
+    const nombre = String(req.body.nombre || "").trim();
+    let usuario = baseUsuarioDesdeNombre(nombre);
     const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "");
+    const confirmarPassword = String(req.body.confirmarPassword || "");
 
-    if (usuario.length < 3 || password.length < 6) {
-        return res
-            .status(400)
-            .send("El usuario debe tener 3 caracteres y la contraseña 6");
+    if (nombre.length < 3 || usuario.length < 3) {
+        return res.status(400).send("Ingresá tu nombre completo");
+    }
+
+    if (!isStrongPassword(password)) {
+        return res.status(400).send("La contraseña debe tener 8 caracteres, mayúscula, minúscula, número y símbolo");
+    }
+
+    if (password !== confirmarPassword) {
+        return res.status(400).send("Las contraseñas no coinciden");
     }
 
     if (!email || !isValidEmail(email)) {
@@ -111,6 +215,7 @@ router.post("/registro", async (req, res) => {
     }
 
     try {
+        usuario = await generarUsuarioDisponible(nombre);
         const existente = await pool.query(
             `
             SELECT usuario, email
@@ -130,21 +235,98 @@ router.post("/registro", async (req, res) => {
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
+        const tokenVerificacion = crearTokenVerificacion();
+        const expiraVerificacion = fechaExpiracionVerificacion();
         await pool.query(
             `
-            INSERT INTO usuarios (usuario, email, password)
-            VALUES ($1, $2, $3)
+            INSERT INTO usuarios (
+                usuario, email, password, emailverificado,
+                emailverificaciontoken, emailverificacionexpira
+            )
+            VALUES ($1, $2, $3, FALSE, $4, $5)
             `,
-            [usuario, email, passwordHash]
+            [usuario, email, passwordHash, tokenVerificacion, expiraVerificacion]
         );
 
-        res.status(201).send("Usuario creado");
+        await enviarEmailVerificacion(email, tokenVerificacion);
+
+        res.status(201).json({
+            usuario,
+            mensaje: "Cuenta creada. Revisá tu email para verificarla."
+        });
     } catch (error) {
         console.error(error);
+        if (error.code === "23505") {
+            return res.status(409).send("El email ya está registrado");
+        }
         const detalle = error.code === "42703"
             ? "Falta actualizar la base de datos (columna email)"
             : "Error al crear el usuario";
         res.status(500).send(detalle);
+    }
+});
+
+router.get("/verificar-email", async (req, res) => {
+    const token = String(req.query.token || "");
+    if (!token) {
+        return res.status(400).send(paginaVerificacion("Enlace inválido", "El enlace de verificación no es válido."));
+    }
+
+    try {
+        const resultado = await pool.query(
+            `
+            UPDATE usuarios
+            SET emailverificado = TRUE,
+                emailverificaciontoken = NULL,
+                emailverificacionexpira = NULL
+            WHERE emailverificaciontoken = $1
+              AND emailverificacionexpira > NOW()
+              AND emailverificado = FALSE
+            RETURNING id
+            `,
+            [token]
+        );
+
+        if (resultado.rowCount === 0) {
+            return res.status(400).send(paginaVerificacion("Enlace vencido", "Este enlace ya fue usado o venció. Solicitá uno nuevo desde la pantalla de inicio de sesión."));
+        }
+
+        res.send(paginaVerificacion("Email verificado", "Tu cuenta ya está activa. Podés volver a la aplicación e iniciar sesión."));
+    } catch (error) {
+        console.error(error);
+        res.status(500).send(paginaVerificacion("No pudimos verificar el email", "Intentá nuevamente más tarde."));
+    }
+});
+
+router.post("/reenviar-verificacion", async (req, res) => {
+    const email = normalizeEmail(req.body.email);
+    const mensaje = "Si la cuenta existe y aún no está verificada, enviamos un nuevo enlace a tu correo.";
+
+    if (!isValidEmail(email)) {
+        return res.status(400).send("Ingresá un email válido");
+    }
+
+    try {
+        const usuario = await pool.query(
+            "SELECT id, email FROM usuarios WHERE LOWER(email) = $1 AND emailverificado = FALSE LIMIT 1",
+            [email]
+        );
+
+        if (usuario.rowCount === 0) {
+            return res.send(mensaje);
+        }
+
+        const token = crearTokenVerificacion();
+        const expira = fechaExpiracionVerificacion();
+        await pool.query(
+            "UPDATE usuarios SET emailverificaciontoken = $1, emailverificacionexpira = $2 WHERE id = $3",
+            [token, expira, usuario.rows[0].id]
+        );
+        await enviarEmailVerificacion(usuario.rows[0].email, token);
+        res.send(mensaje);
+    } catch (error) {
+        console.error(error);
+        res.status(503).send("No se pudo enviar el email de verificación. Intentá nuevamente.");
     }
 });
 
