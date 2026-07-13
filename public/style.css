@@ -116,6 +116,14 @@ strong {
     padding: 24px 0;
 }
 
+.login-view > .login-card:not(.bank-login-card) {
+    display: block;
+}
+
+.login-card-retirada {
+    display: none !important;
+}
+
 .login-card {
     width: min(100%, 470px);
     padding: clamp(28px, 6vw, 52px);
@@ -124,6 +132,222 @@ strong {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     backdrop-filter: blur(16px);
+}
+
+.bank-login-card {
+    position: relative;
+    width: min(100%, 540px);
+    min-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(28px, 7vw, 64px) clamp(20px, 6vw, 44px);
+    color: #fff;
+    background:
+        linear-gradient(180deg, #19336f 0%, #1f4e8b 62%, #27609a 100%);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.bank-login-card::after {
+    content: "";
+    position: absolute;
+    inset: auto -20% -30% -20%;
+    height: 42%;
+    background: radial-gradient(circle at 50% 100%, rgba(96, 170, 222, .28), transparent 62%);
+    pointer-events: none;
+}
+
+.bank-login-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.login-switch-user {
+    position: absolute;
+    top: calc(26px + env(safe-area-inset-top));
+    right: 24px;
+    color: #98d0f3;
+    background: transparent;
+    border: 0;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.bank-login-card .brand-mark {
+    width: 72px;
+    height: 72px;
+    margin: 0 0 34px;
+    background: rgba(255, 255, 255, .14);
+    border: 1px solid rgba(255, 255, 255, .24);
+    border-radius: 20px;
+    box-shadow: 0 18px 34px rgba(0, 0, 0, .18);
+}
+
+.bank-login-card .brand-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
+}
+
+.login-brand-title {
+    margin: 0 0 42px;
+    color: #fff;
+    font-size: clamp(38px, 11vw, 58px);
+    font-weight: 900;
+    line-height: 1;
+    text-align: center;
+    letter-spacing: 0;
+}
+
+.login-profile {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    margin: -16px 0 42px;
+}
+
+.login-profile[hidden] {
+    display: none;
+}
+
+.login-profile img {
+    width: 92px;
+    height: 92px;
+    object-fit: cover;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, .28);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, .2);
+}
+
+.login-profile strong {
+    color: #fff;
+    font-size: 23px;
+}
+
+.login-profile small {
+    color: rgba(222, 240, 255, .78);
+    font-size: 13px;
+}
+
+.bank-login-card .login-fields {
+    width: 100%;
+    max-width: 506px;
+    gap: 10px;
+}
+
+.login-identity-fields {
+    display: grid;
+    gap: 8px;
+}
+
+.login-identity-fields[hidden] {
+    display: none;
+}
+
+.bank-login-card .login-fields label,
+.bank-login-card .remember-option {
+    color: rgba(235, 247, 255, .9);
+}
+
+.login-password-field {
+    display: grid;
+    grid-template-columns: 1fr 48px 48px;
+    align-items: center;
+    gap: 6px;
+    min-height: 64px;
+    padding: 0 10px 0 18px;
+    background: rgba(114, 132, 190, .42);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 8px;
+}
+
+.login-password-field input {
+    min-height: 60px;
+    margin: 0;
+    padding: 0;
+    color: #fff;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    font-size: 18px;
+}
+
+.login-password-field input::placeholder {
+    color: rgba(235, 247, 255, .72);
+}
+
+.login-icon-button {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    color: rgba(235, 247, 255, .82);
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.login-icon-button:hover {
+    background: rgba(255, 255, 255, .1);
+}
+
+.bank-login-card .login-options {
+    margin-top: 2px;
+}
+
+.bank-login-card .forgot-password {
+    margin: 20px 0 26px;
+    color: #93d5f6;
+    font-size: 16px;
+}
+
+.login-submit {
+    width: 100%;
+    max-width: 506px;
+    min-height: 58px;
+    margin-top: 16px;
+    color: #fff;
+    background: #9ccff2;
+    border: 0;
+    border-radius: 8px;
+    font-size: 20px;
+    box-shadow: none;
+}
+
+.login-submit:hover {
+    background: #afdafa;
+}
+
+.bank-login-card .button-secondary {
+    width: 100%;
+    max-width: 506px;
+    color: #fff;
+    background: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .22);
+}
+
+.bank-login-card .android-download,
+.bank-login-card .install-note {
+    display: none;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .brand-mark {
@@ -360,6 +584,40 @@ html.capacitor .install-note {
 
 .workspace {
     padding-bottom: 30px;
+}
+
+.pull-refresh-indicator {
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top));
+    left: 50%;
+    z-index: 2200;
+    min-width: 190px;
+    padding: 10px 14px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: var(--shadow-sm);
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -140%);
+    transition: transform .18s ease, opacity .18s ease, background .18s ease;
+}
+
+body.pull-refresh-visible .pull-refresh-indicator,
+body.pull-refresh-loading .pull-refresh-indicator {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+body.pull-refresh-ready .pull-refresh-indicator,
+body.pull-refresh-loading .pull-refresh-indicator {
+    color: #fff;
+    background: var(--brand);
+    border-color: var(--brand);
 }
 
 .topbar {
@@ -827,6 +1085,46 @@ td select {
     margin: 0;
 }
 
+.estado-pill {
+    width: auto;
+    min-width: 145px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.estado-pill--pendiente {
+    color: #725300;
+    background: #fff3bf;
+    border-color: #e8c85a;
+}
+
+.estado-pill--proceso {
+    color: #144e91;
+    background: #ddecff;
+    border-color: #8dbcf3;
+}
+
+.estado-pill--cobrado {
+    color: #17623a;
+    background: #dff6e7;
+    border-color: #8fcda6;
+}
+
+.estado-pill--vencido {
+    color: #8a2925;
+    background: #fde4e2;
+    border-color: #eaa09b;
+}
+
+.estado-pill--neutral {
+    color: var(--ink);
+    background: #f2efe7;
+    border-color: var(--line);
+}
+
 td button,
 .acciones button {
     width: auto;
@@ -1176,6 +1474,94 @@ td img:hover {
         padding: 0;
         white-space: nowrap;
         overflow: hidden;
+    }
+
+    /* En teléfonos, cada fila de presupuestos se presenta como una tarjeta. */
+    .budget-card-row {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .budget-card-row .budget-card-client,
+    .budget-card-row .budget-card-work {
+        display: block;
+        min-height: 0;
+        text-align: left;
+        border-bottom: 0;
+    }
+
+    .budget-card-row .budget-card-client {
+        padding: 17px 16px 2px;
+        color: var(--ink);
+        font-size: 17px;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+
+    .budget-card-row .budget-card-work {
+        padding: 2px 16px 14px;
+        color: var(--ink-soft);
+        font-size: 13px;
+    }
+
+    .budget-card-row .budget-card-client::before,
+    .budget-card-row .budget-card-work::before,
+    .budget-card-row .budget-card-total::before,
+    .budget-card-row .budget-card-actions::before {
+        display: none;
+    }
+
+    td.budget-card-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 0;
+        margin: 0 16px 7px;
+        padding: 12px 13px;
+        color: var(--brand-dark);
+        background: var(--brand-soft);
+        border: 0;
+        border-radius: 13px;
+        font-size: 19px;
+        font-weight: 800;
+    }
+
+    td.budget-card-total::after {
+        content: "Total";
+        order: -1;
+        color: var(--ink-soft);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .budget-card-row .budget-card-deposit,
+    .budget-card-row .budget-card-balance,
+    .budget-card-row .budget-card-date,
+    .budget-card-row .budget-card-status {
+        margin-right: 16px;
+        margin-left: 16px;
+    }
+
+    td.budget-card-actions {
+        justify-content: flex-end;
+        min-height: 62px;
+        margin-top: 5px;
+        padding: 10px 16px;
+        background: var(--canvas);
+    }
+
+    td.budget-card-actions::before {
+        display: none;
+    }
+
+    td.budget-card-actions button {
+        flex-basis: 46px;
+        width: 46px;
+        min-width: 46px;
+        height: 42px;
+        border-radius: 11px;
     }
 
     .mobile-nav {
@@ -1614,10 +2000,172 @@ td img:hover {
     font-weight: 800;
 }
 
+.biometric-login[hidden] {
+    display: none;
+}
+
 .auth-modal-content p { color: var(--ink-soft); }
 .auth-modal-content label { display: block; margin: 14px 0 6px; }
 .auth-modal-content input { width: 100%; }
 
 @media (max-width: 420px) {
     .login-options { align-items: flex-start; flex-direction: column; }
+}
+
+/* Ajustes para login, modal y formatos chicos */
+.login-view {
+    min-height: 100dvh;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.login-card {
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.modal-logout {
+    padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+}
+
+.modal-logout-contenido {
+    max-height: calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+}
+
+@media (max-width: 540px) {
+    .app-shell {
+        padding: 8px;
+    }
+
+    .login-view {
+        place-items: start center;
+    }
+
+    .login-card {
+        width: min(100%, calc(100vw - 16px));
+        padding: clamp(18px, 5vw, 26px);
+        border-radius: 20px;
+    }
+
+    .brand-mark {
+        width: clamp(50px, 14vw, 62px);
+        height: clamp(50px, 14vw, 62px);
+        margin-bottom: 18px;
+        border-radius: 16px;
+    }
+
+    .login-card h1 {
+        margin-bottom: 10px;
+        font-size: clamp(27px, 8vw, 36px);
+        line-height: 1.08;
+    }
+
+    .login-copy {
+        margin-bottom: 20px;
+        font-size: 13px;
+    }
+
+    .login-fields {
+        gap: 6px;
+    }
+
+    .login-fields input {
+        min-height: 46px;
+        margin-bottom: 9px;
+        padding: 10px 12px;
+    }
+
+    .login-options {
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .login-hint {
+        margin: 6px 0 14px;
+        font-size: 12px;
+    }
+
+    .login-actions {
+        gap: 8px;
+    }
+
+    .login-actions .button {
+        min-height: 44px;
+        padding: 10px 12px;
+    }
+
+    .modal-logout-contenido {
+        width: min(92vw, 360px);
+        padding: clamp(22px, 6vw, 32px);
+        border-radius: 18px;
+    }
+
+    .modal-logout-contenido h2 {
+        margin-bottom: clamp(22px, 4vh, 34px);
+        font-size: clamp(23px, 7vw, 30px);
+        line-height: 1.25;
+    }
+
+    .modal-logout-botones {
+        gap: 10px;
+        flex-wrap: nowrap;
+    }
+
+    .btn-volver,
+    .btn-salir {
+        min-height: 44px;
+        padding: 11px 18px;
+        font-size: 14px;
+    }
+}
+
+@media (max-height: 700px) {
+    .login-card {
+        padding-top: 18px;
+        padding-bottom: 18px;
+    }
+
+    .brand-mark {
+        margin-bottom: 14px;
+    }
+
+    .eyebrow {
+        margin-bottom: 5px;
+    }
+
+    .login-card h1 {
+        margin-bottom: 8px;
+    }
+
+    .login-copy {
+        margin-bottom: 14px;
+    }
+
+    .login-fields input {
+        min-height: 42px;
+        margin-bottom: 7px;
+    }
+
+    .modal-logout-contenido {
+        padding-top: 24px;
+        padding-bottom: 24px;
+    }
+
+    .modal-logout-contenido h2 {
+        margin-bottom: 22px;
+        font-size: clamp(22px, 6vh, 28px);
+    }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+    .login-view {
+        align-items: start;
+        min-height: auto;
+    }
+
+    .modal-logout {
+        align-items: flex-start;
+    }
 }

@@ -109,6 +109,32 @@ function cargarDatosEnSegundoPlano(origen = "login") {
     setTimeout(iniciarCarga, 0);
 }
 
+function obtenerClaseEstado(estadoActual) {
+    const estadoNormalizado = String(estadoActual || "").trim().toLowerCase();
+
+    if (estadoNormalizado === "pendiente" || estadoNormalizado === "saldo pendiente") {
+        return "estado-pill--pendiente";
+    }
+
+    if (estadoNormalizado === "en proceso") {
+        return "estado-pill--proceso";
+    }
+
+    if (estadoNormalizado === "cobrado" || estadoNormalizado === "cobrado total") {
+        return "estado-pill--cobrado";
+    }
+
+    if (estadoNormalizado === "vencido") {
+        return "estado-pill--vencido";
+    }
+
+    return "estado-pill--neutral";
+}
+
+function actualizarClaseEstado(selector) {
+    selector.className = `estado-pill ${obtenerClaseEstado(selector.value)}`;
+}
+
 function obtenerIndicadorPull() {
     let indicador = document.getElementById("pullRefreshIndicador");
     if (indicador) return indicador;
@@ -1101,34 +1127,36 @@ document.getElementById("facturacionMes").textContent = "$" +
 
     lista.innerHTML += `
         
-        <tr>
-            <td data-label="Cliente">
+        <tr class="budget-card-row">
+            <td class="budget-card-client" data-label="Cliente">
                 ${p.cliente}
             </td>
 
-            <td data-label="Trabajo">
+            <td class="budget-card-work" data-label="Trabajo">
                 ${p.trabajo}
             </td>
 
-            <td data-label="Total">
+            <td class="budget-card-total" data-label="Total">
                 $${Number(p.total).toLocaleString("es-AR")}
             </td>
 
-            <td data-label="SeÃ±a">
+            <td class="budget-card-deposit" data-label="SeÃ±a">
                 $${Number(p.sena || 0).toLocaleString("es-AR")}
             </td>
 
-            <td data-label="Saldo">
+            <td class="budget-card-balance" data-label="Saldo">
                 $${Number(p.saldo || p.total).toLocaleString("es-AR")}
             </td>
 
-            <td data-label="Vencimiento">
+            <td class="budget-card-date" data-label="Vencimiento">
                 ${p.fechaVencimiento || "-"}
             </td>
-            <td data-label="Estado">
+            <td class="budget-card-status" data-label="Estado">
 
                 <select
+                    class="estado-pill ${obtenerClaseEstado(p.estado)}"
                     onchange="
+                        actualizarClaseEstado(this);
                         cambiarEstado(
                             ${p.id},
                             this.value
@@ -1194,7 +1222,7 @@ document.getElementById("facturacionMes").textContent = "$" +
 
             </td>
 
-            <td data-label="Acciones">                <button class="btn-accion-tabla" type="button" title="Ver detalle" aria-label="Ver detalle" onclick="verDetalle(${p.id})">
+            <td class="budget-card-actions" data-label="Acciones">                <button class="btn-accion-tabla" type="button" title="Ver detalle" aria-label="Ver detalle" onclick="verDetalle(${p.id})">
                     &#128065;
                 </button>
 
