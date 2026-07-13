@@ -743,7 +743,7 @@ async function cargarPresupuestos() {
 
     if (!respuesta.ok) {
         if (respuesta.status === 401) {
-            logout();
+            confirmarLogout();
         }
         finTotal();
         return;
@@ -1844,6 +1844,10 @@ if (sesionAutenticada()) {
 prepararBotonBiometria();
 function logout() {
 
+    if (!sesionAutenticada()) {
+        return;
+    }
+
     document
         .getElementById(
             "modalLogout"
@@ -2538,33 +2542,6 @@ if (window.Capacitor?.isNativePlatform?.()) {
 );
 
 }
-let inicioY = 0;
-
-document.addEventListener("touchstart", (e) => {
-    if (window.scrollY === 0) {
-        inicioY = e.touches[0].clientY;
-    }
-});
-
-document.addEventListener("touchend", (e) => {
-
-    const finY = e.changedTouches[0].clientY;
-
-    if (
-        window.scrollY === 0 &&
-        finY - inicioY > 120
-    ) {
-
-        mostrarNotificacion("Actualizando...");
-
-        cargarPresupuestos();
-        cargarGastos();
-        cargarResumenGastos();
-        cargarResumenMensual();
-
-    }
-
-});
 function toggleMenu() {
 
     document
