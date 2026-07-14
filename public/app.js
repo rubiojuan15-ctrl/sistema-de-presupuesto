@@ -1445,7 +1445,9 @@ function descargarPDF(id) {
 }
 async function cambiarEstado(id, estado) {
 
-    await fetch(API + "/presupuestos/cambiar-estado/" + id,
+    console.log("[CAMBIAR_ESTADO] frontend envía", { id, estado });
+
+    const respuesta = await fetch(API + "/presupuestos/cambiar-estado/" + id,
         {
 
             method: "PUT",
@@ -1463,6 +1465,20 @@ async function cambiarEstado(id, estado) {
 
         }
     );
+
+    if (!respuesta.ok) {
+        const mensaje = await respuesta.text();
+        console.error("[CAMBIAR_ESTADO] error del backend", {
+            id,
+            estado,
+            status: respuesta.status,
+            mensaje
+        });
+        mostrarNotificacion(mensaje || "No se pudo actualizar el estado");
+        return;
+    }
+
+    console.log("[CAMBIAR_ESTADO] actualizado", { id, estado });
 
     cargarPresupuestos();
 
