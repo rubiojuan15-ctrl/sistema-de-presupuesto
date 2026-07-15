@@ -5,6 +5,11 @@ const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
 const cors = require("cors");
 require("dotenv").config();
+const procesoInicio = process.hrtime.bigint();
+
+function duracionMs(inicio) {
+    return Number(process.hrtime.bigint() - inicio) / 1e6;
+}
 const { GoogleGenAI } = require("@google/genai");
 const geminiApiKey = process.env.GEMINI_API_KEY || process.env.Gemini_API_Key;
 const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
@@ -37,6 +42,7 @@ const pool = require("./database/postgres");
 const ensureSchema = require("./database/schema");
 const auth = require("./middlewares/auth");
 const authRoutes = require("./routes/auth");
+const usuariosRoutes = require("./routes/usuarios");
 const { router: presupuestosRoutes, presupuestoColumns } = require("./routes/presupuestos");
 const gastosRoutes = require("./routes/gastos");
 
@@ -60,15 +66,36 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use((req, res, next) => {
-    const etiqueta = `backend:request:${req.method}:${req.originalUrl}:${Date.now()}`;
-    console.time(etiqueta);
+    const inicio = process.hrtime.bigint();
+    const requestId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    req.metricas = { inicio, requestId };
+    res.setHeader("X-Request-Id", requestId);
+
+    console.log("[METRICA_HTTP] request recibido", {
+        requestId,
+        metodo: req.method,
+        ruta: req.path,
+        procesoActivoMs: Math.round(duracionMs(procesoInicio))
+    });
+
     res.on("finish", () => {
-        console.timeEnd(etiqueta);
+        console.log("[METRICA_HTTP] respuesta completada", {
+            requestId,
+            metodo: req.method,
+            ruta: req.path,
+            status: res.statusCode,
+            totalRespuestaMs: Math.round(duracionMs(inicio))
+        });
     });
     next();
 });
 
+app.get("/healthz", (_req, res) => {
+    res.json({ ok: true, procesoActivoMs: Math.round(duracionMs(procesoInicio)) });
+});
+
 app.use(authRoutes);
+app.use("/usuarios", usuariosRoutes);
 app.use("/presupuestos", presupuestosRoutes);
 app.use("/gastos", gastosRoutes);
 
@@ -295,9 +322,17 @@ app.use((error, _req, res, _next) => {
 });
 */
 async function start() {
+    const inicioSchema = process.hrtime.bigint();
+    console.log("[METRICA_ARRANQUE] iniciando proceso");
     await ensureSchema();
+    console.log("[METRICA_ARRANQUE] esquema listo", {
+        esquemaMs: Math.round(duracionMs(inicioSchema)),
+        arranqueTotalMs: Math.round(duracionMs(procesoInicio))
+    });
     return app.listen(port, () => {
-        console.log(`Servidor funcionando en http://localhost:${port}`);
+        console.log(`Servidor funcionando en http://localhost:${port}`, {
+            arranqueTotalMs: Math.round(duracionMs(procesoInicio))
+        });
     });
 }
 

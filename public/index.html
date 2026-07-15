@@ -149,6 +149,9 @@
                             <button id="temaOscuro" type="button" onclick="seleccionarTema('dark')" aria-pressed="false">Oscuro</button>
                         </div>
                     </div>
+                    <button type="button" onclick="abrirMiCuenta()">
+                        Mi cuenta
+                    </button>
                     <button onclick="logout()">
                         🚪 Cerrar sesión
                     </button>
@@ -485,6 +488,25 @@
             <input type="password" id="repetirNuevaPassword" minlength="6" autocomplete="new-password">
             <div class="modal-logout-botones">
                 <button class="btn-salir" type="button" onclick="restablecerPassword()">Guardar contraseña</button>
+            </div>
+        </div>
+    </div>
+    <div id="modalMiCuenta" class="modal-logout" role="dialog" aria-modal="true" aria-labelledby="miCuentaTitulo">
+        <div class="modal-logout-contenido auth-modal-content">
+            <h2 id="miCuentaTitulo">Mi cuenta</h2>
+            <p class="modal-copy">Podés descargar un respaldo de tus datos antes de eliminar la cuenta.</p>
+            <button class="button button-secondary" type="button" onclick="descargarBackup()">Descargar mi backup</button>
+            <hr>
+            <h3>Eliminar mi cuenta</h3>
+            <p class="modal-copy">Esta acción borra todos tus presupuestos, gastos, pagos y datos de cuenta. No se puede deshacer.</p>
+            <label for="passwordEliminarCuenta">Contraseña actual</label>
+            <input type="password" id="passwordEliminarCuenta" autocomplete="current-password">
+            <label for="confirmacionEliminarCuenta">Escribí ELIMINAR para confirmar</label>
+            <input type="text" id="confirmacionEliminarCuenta" autocomplete="off" spellcheck="false">
+            <p id="errorEliminarCuenta" class="modal-error" aria-live="polite"></p>
+            <div class="modal-logout-botones">
+                <button class="btn-volver" type="button" onclick="cerrarMiCuenta()">Cancelar</button>
+                <button id="botonEliminarCuenta" class="btn-salir btn-danger" type="button" onclick="eliminarMiCuenta()">Eliminar mi cuenta</button>
             </div>
         </div>
     </div>

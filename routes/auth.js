@@ -17,6 +17,10 @@ function isValidEmail(email) {
     return EMAIL_RE.test(email);
 }
 
+function duracionMs(inicio) {
+    return Number(process.hrtime.bigint() - inicio) / 1e6;
+}
+
 function isStrongPassword(password) {
     return password.length >= 8 &&
         /[A-Z]/.test(password) &&
@@ -112,6 +116,7 @@ function paginaVerificacion(titulo, mensaje) {
 }*/
 
 router.post("/login", async (req, res) => {
+    const inicioEndpoint = process.hrtime.bigint();
     const email = normalizeEmail(req.body.email);
     const usuario = String(req.body.usuario || "").trim();
     const password = String(req.body.password || "");
@@ -122,19 +127,34 @@ router.post("/login", async (req, res) => {
 
     const medicionLogin = `backend:login:${Date.now()}:${Math.random().toString(16).slice(2)}`;
     console.time(medicionLogin);
+    console.log("[METRICA_LOGIN] endpoint iniciado", {
+        requestId: req.metricas?.requestId,
+        demoraHastaEndpointMs: Math.round(req.metricas ? duracionMs(req.metricas.inicio) : 0)
+    });
 
+    let cliente;
     try {
-        console.time(`${medicionLogin}:postgres`);
+        const inicioAdquisicion = process.hrtime.bigint();
+        cliente = await pool.connect();
+        console.log("[METRICA_LOGIN] adquisición de conexión", {
+            requestId: req.metricas?.requestId,
+            adquisicionConexionMs: Math.round(duracionMs(inicioAdquisicion)),
+            poolTotal: pool.totalCount,
+            poolIdle: pool.idleCount,
+            poolWaiting: pool.waitingCount
+        });
+
+        console.time(`${medicionLogin}:postgres-query`);
         const resultado = email
-            ? await pool.query(
+            ? await cliente.query(
                   "SELECT id, usuario, email, password, emailverificado FROM usuarios WHERE LOWER(email) = $1",
                   [email]
               )
-            : await pool.query(
+            : await cliente.query(
                   "SELECT id, usuario, email, password, emailverificado FROM usuarios WHERE usuario = $1",
                   [usuario]
               );
-        console.timeEnd(`${medicionLogin}:postgres`);
+        console.timeEnd(`${medicionLogin}:postgres-query`);
         const row = resultado.rows[0];
 
         console.time(`${medicionLogin}:bcrypt`);
@@ -171,6 +191,12 @@ router.post("/login", async (req, res) => {
         console.error(error);
         res.status(500).send("Error al iniciar sesión");
     } finally {
+        if (cliente) cliente.release();
+        console.log("[METRICA_LOGIN] endpoint finalizado", {
+            requestId: req.metricas?.requestId,
+            endpointLoginMs: Math.round(duracionMs(inicioEndpoint)),
+            status: res.statusCode
+        });
         console.timeEnd(medicionLogin);
     }
 });

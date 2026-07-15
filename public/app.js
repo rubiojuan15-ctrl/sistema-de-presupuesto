@@ -2741,6 +2741,65 @@ function cerrarModalLogout() {
 
 }
 
+function abrirMiCuenta() {
+    document.getElementById("menuUsuario").classList.remove("mostrar");
+    document.getElementById("passwordEliminarCuenta").value = "";
+    document.getElementById("confirmacionEliminarCuenta").value = "";
+    document.getElementById("errorEliminarCuenta").textContent = "";
+    document.getElementById("modalMiCuenta").classList.add("mostrar");
+}
+
+function cerrarMiCuenta() {
+    document.getElementById("modalMiCuenta").classList.remove("mostrar");
+}
+
+async function eliminarMiCuenta() {
+    const password = document.getElementById("passwordEliminarCuenta").value;
+    const confirmacion = document.getElementById("confirmacionEliminarCuenta").value.trim();
+    const error = document.getElementById("errorEliminarCuenta");
+    const boton = document.getElementById("botonEliminarCuenta");
+
+    error.textContent = "";
+    if (!password || confirmacion !== "ELIMINAR") {
+        error.textContent = "Ingresá tu contraseña y escribí ELIMINAR para confirmar.";
+        return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = "Eliminando...";
+
+    try {
+        const respuesta = await fetch(API + "/usuarios/me", {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                authorization: token()
+            },
+            body: JSON.stringify({ password, confirmacion })
+        });
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(datos.error || "No se pudo eliminar la cuenta.");
+        }
+
+        cerrarMiCuenta();
+        localStorage.clear();
+        sessionStorage.clear();
+        clearTimeout(temporizadorInactividad);
+        clearTimeout(temporizadorCierreInactividad);
+        ocultarAvisoInactividad();
+        document.getElementById("sistema").style.display = "none";
+        document.getElementById("login").style.display = "block";
+        mostrarNotificacion("Cuenta eliminada correctamente.");
+    } catch (problema) {
+        error.textContent = problema.message || "No se pudo eliminar la cuenta.";
+    } finally {
+        boton.disabled = false;
+        boton.textContent = "Eliminar mi cuenta";
+    }
+}
+
 function confirmarLogout() {
 
     localStorage.removeItem("logueado");
@@ -2894,6 +2953,9 @@ window.toggleMenu = toggleMenu;
 window.seleccionarTema = seleccionarTema;
 window.cerrarModalLogout = cerrarModalLogout;
 window.confirmarLogout = confirmarLogout;
+window.abrirMiCuenta = abrirMiCuenta;
+window.cerrarMiCuenta = cerrarMiCuenta;
+window.eliminarMiCuenta = eliminarMiCuenta;
 window.registrarPago = registrarPago;
 window.confirmarCobro = confirmarCobro;
 window.cerrarModalCobro = cerrarModalCobro;
