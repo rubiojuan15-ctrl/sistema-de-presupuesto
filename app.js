@@ -3,6 +3,7 @@ const path = require("path");
 const express = require("express");
 const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
+const cron = require("node-cron");
 const cors = require("cors");
 require("dotenv").config();
 const procesoInicio = process.hrtime.bigint();
@@ -154,6 +155,18 @@ app.get("/presupuestos/generar-pdf/:id", auth, async (req, res) => {
             return res.status(404).send("Presupuesto no encontrado");
         }
 
+        const perfilResultado = await pool.query(
+            `SELECT nombretitular, nombrenegocio, telefonocomercial, emailcomercial, logonegocio
+             FROM usuarios WHERE id = $1`,
+            [req.usuario.id]
+        );
+        const perfil = perfilResultado.rows[0] || {};
+        const logo = String(perfil.logonegocio || "");
+        const extensionLogo = path.extname(logo).toLowerCase();
+        const rutaLogo = logo.startsWith("/uploads/") && [".jpg", ".jpeg", ".png"].includes(extensionLogo)
+            ? path.join(__dirname, logo)
+            : "";
+
         const doc = new PDFDocument({ margin: 50 });
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
@@ -162,6 +175,16 @@ app.get("/presupuestos/generar-pdf/:id", auth, async (req, res) => {
         );
         doc.pipe(res);
 
+        if (rutaLogo && fs.existsSync(rutaLogo)) {
+            doc.image(rutaLogo, 50, 42, { fit: [100, 60] });
+        }
+        const nombreNegocio = perfil.nombrenegocio || perfil.nombretitular;
+        if (nombreNegocio) {
+            doc.fontSize(14).text(nombreNegocio, 165, 48, { align: "right" });
+            const contacto = [perfil.telefonocomercial, perfil.emailcomercial].filter(Boolean).join(" · ");
+            if (contacto) doc.fontSize(9).fillColor("#555555").text(contacto, 165, 67, { align: "right" }).fillColor("black");
+        }
+        doc.moveDown(2);
         doc.fontSize(26).text("PRESUPUESTO", { align: "center" });
         doc.moveDown(1.5);
         doc.fontSize(12).text(`Fecha: ${presupuesto.fecha || "-"}`);
@@ -342,5 +365,10 @@ if (require.main === module) {
         process.exitCode = 1;
     });
 }
-
+async function enviarRecordatorios() {
+    console.log("[CRON] Ejecutando revisión de presupuestos...");
+}
+cron.schedule("0 8 * * *", async () => {
+    await enviarRecordatorios();
+});
 module.exports = { app, start };
