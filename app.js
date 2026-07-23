@@ -7,7 +7,7 @@ const cron = require("node-cron");
 const cors = require("cors");
 require("dotenv").config();
 const procesoInicio = process.hrtime.bigint();
-
+const { enviarRecordatorios } = require("./services/recordatorios");
 function duracionMs(inicio) {
     return Number(process.hrtime.bigint() - inicio) / 1e6;
 }
@@ -365,10 +365,11 @@ if (require.main === module) {
         process.exitCode = 1;
     });
 }
-async function enviarRecordatorios() {
-    console.log("[CRON] Ejecutando revisión de presupuestos...");
-}
+/*cron.schedule("* * * * *", async () => {
+    await enviarRecordatorios();
+});*/
 cron.schedule("0 8 * * *", async () => {
     await enviarRecordatorios();
 });
+
 module.exports = { app, start };
