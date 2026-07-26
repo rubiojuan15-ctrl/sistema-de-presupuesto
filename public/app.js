@@ -62,6 +62,7 @@ let pullListo = false;
 let pullActualizando = false;
 let temporizadorUsuarioSugerido = null;
 let consultaUsuarioSugerido = 0;
+let googleIdentityInicializado = false;
 
 function iniciarMedicion(nombre) {
     const etiqueta = `${nombre} #${++contadorMediciones}`;
@@ -276,6 +277,7 @@ function mostrarSistemaAutenticado(origen = "login") {
         .style.display = "block";
 
     actualizarMenuUsuario();
+    cargarPerfilUsuario();
     fin();
     iniciarControlInactividad();
     cargarDatosEnSegundoPlano(origen);
@@ -1490,7 +1492,89 @@ function obtenerColorCss(variable) {
 }
 
 function formatoMoneda(valor) {
-    return "$" + Number(valor || 0).toLocaleString("es-AR");
+    return simboloMoneda() + Number(valor || 0).toLocaleString("es-AR");
+}
+
+function simboloMoneda() {
+    return "$";
+}
+
+function asignarValorPerfil(id, valor) {
+    const campo = document.getElementById(id);
+    if (campo) campo.value = valor || "";
+}
+
+function actualizarVistaLogoPerfil(url) {
+    const preview = document.getElementById("perfilLogoPreview");
+    const placeholder = document.getElementById("perfilLogoPlaceholder");
+    if (!preview || !placeholder) return;
+    preview.hidden = !url;
+    placeholder.hidden = Boolean(url);
+    if (url) preview.src = url;
+    else preview.removeAttribute("src");
+}
+
+async function cargarPerfilUsuario() {
+    try {
+        const respuesta = await fetch(API + "/usuarios/perfil", { headers: { authorization: token() } });
+        if (!respuesta.ok) return;
+        const perfil = await respuesta.json();
+        localStorage.setItem("monedaPredeterminada", perfil.monedaPredeterminada || "ARS");
+        asignarValorPerfil("perfilNombreTitular", perfil.nombreTitular);
+        asignarValorPerfil("perfilNombreNegocio", perfil.nombreNegocio);
+        asignarValorPerfil("perfilTelefonoComercial", perfil.telefonoComercial);
+        asignarValorPerfil("perfilEmailComercial", perfil.emailComercial);
+        asignarValorPerfil("perfilDireccionComercial", perfil.direccionComercial);
+        asignarValorPerfil("perfilMoneda", perfil.monedaPredeterminada || "ARS");
+        actualizarVistaLogoPerfil(perfil.logoNegocio);
+    } catch (error) {
+        console.warn("No se pudo cargar el perfil", error);
+    }
+}
+
+function abrirMiPerfil() {
+    document.getElementById("menuUsuario")?.classList.remove("mostrar");
+    document.getElementById("errorMiPerfil").textContent = "";
+    cargarPerfilUsuario();
+    document.getElementById("modalMiPerfil").classList.add("mostrar");
+}
+
+function cerrarMiPerfil() {
+    document.getElementById("modalMiPerfil").classList.remove("mostrar");
+}
+
+async function guardarMiPerfil(evento) {
+    evento.preventDefault();
+    const formulario = document.getElementById("formMiPerfil");
+    const boton = document.getElementById("guardarMiPerfil");
+    const error = document.getElementById("errorMiPerfil");
+    const datos = new FormData(formulario);
+    const logo = document.getElementById("perfilLogo").files[0];
+    error.textContent = "";
+    if (logo && logo.size > 2 * 1024 * 1024) {
+        error.textContent = "El logo no puede superar 2 MB.";
+        return;
+    }
+    boton.disabled = true;
+    boton.textContent = "Guardando...";
+    try {
+        const respuesta = await fetch(API + "/usuarios/perfil", {
+            method: "PUT", headers: { authorization: token() }, body: datos
+        });
+        const perfil = await respuesta.json();
+        if (!respuesta.ok) throw new Error(perfil.error || "No se pudo guardar el perfil.");
+        localStorage.setItem("monedaPredeterminada", perfil.monedaPredeterminada || "ARS");
+        actualizarVistaLogoPerfil(perfil.logoNegocio);
+        document.getElementById("perfilLogo").value = "";
+        cerrarMiPerfil();
+        mostrarNotificacion("Perfil y configuración guardados.");
+        cargarDatosEnSegundoPlano("perfil");
+    } catch (problema) {
+        error.textContent = problema.message || "No se pudo guardar el perfil.";
+    } finally {
+        boton.disabled = false;
+        boton.textContent = "💾 Guardar cambios";
+    }
 }
 
 function opcionesGraficos() {
@@ -1800,6 +1884,88 @@ async function login() {
     finLogin();
 }
 
+function completarInicioSesionGoogle(datos) {
+    if (recordarme.checked) {
+        localStorage.setItem("logueado", "si");
+    } else {
+        sessionStorage.setItem("logueado", "si");
+    }
+    localStorage.setItem("token", datos.token);
+    localStorage.setItem("usuarioId", datos.id);
+    if (datos.usuario) localStorage.setItem("usuario", datos.usuario);
+    if (datos.email) localStorage.setItem("email", datos.email);
+
+    if (recordarme.checked) {
+        localStorage.setItem("usuarioRecordado", datos.usuario || "");
+        localStorage.setItem("emailRecordado", datos.email || "");
+    } else {
+        localStorage.removeItem("usuarioRecordado");
+        localStorage.removeItem("emailRecordado");
+    }
+    mostrarSistemaAutenticado("google");
+    prepararBotonBiometria();
+}
+
+async function configurarInicioSesionGoogle() {
+    const boton = document.getElementById("btnGoogle");
+    if (!boton) return;
+
+    try {
+        const respuesta = await fetch(API + "/auth/google/config");
+        const config = await respuesta.json();
+        if (!config.clientId) return;
+
+        const disponible = await new Promise(resolve => {
+            if (window.google?.accounts?.id) return resolve(true);
+            const intervalo = setInterval(() => {
+                if (window.google?.accounts?.id) {
+                    clearInterval(intervalo);
+                    resolve(true);
+                }
+            }, 100);
+            setTimeout(() => {
+                clearInterval(intervalo);
+                resolve(false);
+            }, 5000);
+        });
+        if (!disponible) return;
+
+        window.google.accounts.id.initialize({
+            client_id: config.clientId,
+            callback: procesarCredencialGoogle,
+            auto_select: false,
+            cancel_on_tap_outside: true
+        });
+        googleIdentityInicializado = true;
+        boton.hidden = false;
+    } catch (error) {
+        console.warn("No se pudo configurar el acceso con Google", error);
+    }
+}
+
+function iniciarSesionGoogle() {
+    if (!googleIdentityInicializado || !window.google?.accounts?.id) {
+        mostrarNotificacion("El acceso con Google no estÃ¡ disponible en este momento.");
+        return;
+    }
+    window.google.accounts.id.prompt();
+}
+
+async function procesarCredencialGoogle({ credential }) {
+    try {
+        const respuesta = await fetch(API + "/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ credential })
+        });
+        const contenido = await respuesta.text();
+        if (!respuesta.ok) throw new Error(contenido || "No pudimos iniciar sesiÃ³n con Google");
+        completarInicioSesionGoogle(JSON.parse(contenido));
+    } catch (error) {
+        mostrarNotificacion(error.message || "No pudimos iniciar sesiÃ³n con Google");
+    }
+}
+
 async function reenviarVerificacion() {
     const emailVerificacion = email.value.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVerificacion)) {
@@ -2018,6 +2184,7 @@ if (sesionAutenticada()) {
 
 }
 prepararBotonBiometria();
+configurarInicioSesionGoogle();
 function logout() {
 
     if (!sesionAutenticada()) {
@@ -2741,12 +2908,49 @@ function cerrarModalLogout() {
 
 }
 
-function abrirMiCuenta() {
+async function abrirMiCuenta() {
     document.getElementById("menuUsuario").classList.remove("mostrar");
     document.getElementById("passwordEliminarCuenta").value = "";
     document.getElementById("confirmacionEliminarCuenta").value = "";
     document.getElementById("errorEliminarCuenta").textContent = "";
     document.getElementById("modalMiCuenta").classList.add("mostrar");
+
+    const estado = document.getElementById("estadoMiCuenta");
+    const usuarioCuenta = document.getElementById("cuentaUsuario");
+    const emailCuenta = document.getElementById("cuentaEmail");
+    const emailVerificado = document.getElementById("cuentaEmailVerificado");
+    const tokenActual = token();
+
+    estado.textContent = "Cargando datos de tu cuenta...";
+    usuarioCuenta.value = "";
+    emailCuenta.value = "";
+    emailVerificado.value = "";
+
+    if (!tokenActual) {
+        estado.textContent = "No estas autenticado. Cerra sesion e inicia nuevamente para ver tu cuenta.";
+        return;
+    }
+
+    try {
+        const respuesta = await fetch(API + "/perfil", {
+            headers: { authorization: tokenActual }
+        });
+        const datos = await respuesta.json().catch(() => ({}));
+
+        if (!respuesta.ok) {
+            if (respuesta.status === 401) {
+                throw new Error("Tu sesion vencio o no es valida. Cerra sesion e inicia nuevamente.");
+            }
+            throw new Error(datos.mensaje || "No se pudieron cargar los datos de tu cuenta.");
+        }
+
+        usuarioCuenta.value = datos.usuario || "Sin usuario";
+        emailCuenta.value = datos.email || "Sin email registrado";
+        emailVerificado.value = datos.emailVerificado ? "Verificado" : "Sin verificar";
+        estado.textContent = "Datos de cuenta actualizados.";
+    } catch (error) {
+        estado.textContent = error.message || "No se pudieron cargar los datos de tu cuenta.";
+    }
 }
 
 function cerrarMiCuenta() {
@@ -2920,6 +3124,7 @@ async function generarPresupuestoConIA() {
 // Esto permite que los onclick="" del HTML sigan funcionando como antes
 
 window.login = login;
+window.iniciarSesionGoogle = iniciarSesionGoogle;
 window.reenviarVerificacion = reenviarVerificacion;
 window.entrarConBiometria = entrarConBiometria;
 window.continuarSesion = continuarSesion;
@@ -2956,6 +3161,9 @@ window.confirmarLogout = confirmarLogout;
 window.abrirMiCuenta = abrirMiCuenta;
 window.cerrarMiCuenta = cerrarMiCuenta;
 window.eliminarMiCuenta = eliminarMiCuenta;
+window.abrirMiPerfil = abrirMiPerfil;
+window.cerrarMiPerfil = cerrarMiPerfil;
+window.guardarMiPerfil = guardarMiPerfil;
 window.registrarPago = registrarPago;
 window.confirmarCobro = confirmarCobro;
 window.cerrarModalCobro = cerrarModalCobro;
@@ -2965,3 +3173,14 @@ window.descargarPDF = descargarPDF;
 window.enviarWhatsApp = enviarWhatsApp;
 window.cerrarModalAcciones = cerrarModalAcciones;
 window.generarPresupuestoConIA = generarPresupuestoConIA;
+
+document.getElementById("perfilLogo")?.addEventListener("change", (evento) => {
+    const archivo = evento.target.files?.[0];
+    if (!archivo) return;
+    if (archivo.size > 2 * 1024 * 1024) {
+        evento.target.value = "";
+        document.getElementById("errorMiPerfil").textContent = "El logo no puede superar 2 MB.";
+        return;
+    }
+    actualizarVistaLogoPerfil(URL.createObjectURL(archivo));
+});

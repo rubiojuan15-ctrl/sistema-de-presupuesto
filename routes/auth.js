@@ -1,13 +1,17 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 const pool = require("../database/postgres");
+const auth = require("../middlewares/auth");
 
 const router = express.Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const crypto = require("crypto");
 const mailer = require("../utils/mailer");
+const googleClientId = String(process.env.GOOGLE_CLIENT_ID || "").trim();
+const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
 
 function normalizeEmail(value) {
     return String(value || "").trim().toLowerCase();
@@ -65,6 +69,14 @@ function fechaExpiracionVerificacion() {
     return new Date(Date.now() + 24 * 60 * 60 * 1000);
 }
 
+function crearTokenSesion(usuario) {
+    return jwt.sign({ id: usuario.id }, process.env.JWT_SECRET || "secreto123", { expiresIn: "7d" });
+}
+
+function respuestaSesion(usuario) {
+    return { token: crearTokenSesion(usuario), usuario: usuario.usuario, email: usuario.email || "", id: usuario.id };
+}
+
 function urlAplicacion() {
     return (process.env.APP_URL || "https://sistema-de-presupuesto.onrender.com").replace(/\/$/, "");
 }
@@ -92,6 +104,26 @@ async function enviarEmailVerificacion(email, token) {
 function paginaVerificacion(titulo, mensaje) {
     return `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><body style="margin:0;display:grid;min-height:100vh;place-items:center;background:#f3f1ea;font-family:system-ui,sans-serif;color:#17221d"><main style="max-width:420px;margin:24px;padding:32px;background:#fff;border-radius:20px;box-shadow:0 12px 36px rgba(0,0,0,.12);text-align:center"><h1 style="margin-top:0">${titulo}</h1><p>${mensaje}</p></main></body></html>`;
 }
+
+router.get("/perfil", auth, async (req, res) => {
+    try {
+        const resultado = await pool.query(
+            `SELECT usuario, email, emailverificado AS "emailVerificado"
+             FROM usuarios
+             WHERE id = $1`,
+            [req.usuario.id]
+        );
+
+        if (!resultado.rowCount) {
+            return res.status(404).json({ mensaje: "Usuario no encontrado." });
+        }
+
+        return res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error("Error al obtener el perfil de la cuenta:", error);
+        return res.status(500).json({ mensaje: "No se pudo cargar la informacion de tu cuenta." });
+    }
+});
 
 /*async function enviarEmailRecuperacion(email, token) {
     const apiKey = process.env.RESEND_API_KEY;
@@ -174,11 +206,7 @@ router.post("/login", async (req, res) => {
         }
 
         console.time(`${medicionLogin}:jwt`);
-        const token = jwt.sign(
-            { id: row.id },
-            process.env.JWT_SECRET || "secreto123",
-            { expiresIn: "7d" }
-        );
+        const token = crearTokenSesion(row);
         console.timeEnd(`${medicionLogin}:jwt`);
 
         res.json({
@@ -198,6 +226,61 @@ router.post("/login", async (req, res) => {
             status: res.statusCode
         });
         console.timeEnd(medicionLogin);
+    }
+});
+
+router.get("/auth/google/config", (_req, res) => {
+    res.json({ clientId: googleClientId });
+});
+
+router.post("/auth/google", async (req, res) => {
+    if (!googleClient) return res.status(503).send("El acceso con Google no estÃ¡ configurado");
+
+    const credential = String(req.body?.credential || "");
+    if (!credential) return res.status(400).send("Falta la credencial de Google");
+
+    try {
+        const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: googleClientId });
+        const perfil = ticket.getPayload();
+        const googleId = String(perfil?.sub || "");
+        const email = normalizeEmail(perfil?.email);
+
+        if (!googleId || !isValidEmail(email) || !perfil?.email_verified) {
+            return res.status(401).send("No pudimos verificar tu cuenta de Google");
+        }
+
+        let usuario = (await pool.query(
+            "SELECT id, usuario, email, googleid FROM usuarios WHERE googleid = $1 OR LOWER(email) = $2 LIMIT 1",
+            [googleId, email]
+        )).rows[0];
+
+        if (usuario) {
+            if (usuario.googleid && usuario.googleid !== googleId) {
+                return res.status(409).send("Ese email ya estÃ¡ vinculado a otra cuenta de Google");
+            }
+            await pool.query(
+                "UPDATE usuarios SET googleid = COALESCE(googleid, $1), emailverificado = TRUE WHERE id = $2",
+                [googleId, usuario.id]
+            );
+        } else {
+            const nombre = String(perfil?.name || email.split("@")[0]).trim();
+            const nombreUsuario = await generarUsuarioDisponible(nombre);
+            if (!nombreUsuario) return res.status(400).send("No pudimos crear un usuario para esta cuenta");
+
+            const passwordInutilizable = await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10);
+            usuario = (await pool.query(
+                `INSERT INTO usuarios (usuario, email, password, emailverificado, googleid)
+                 VALUES ($1, $2, $3, TRUE, $4)
+                 RETURNING id, usuario, email`,
+                [nombreUsuario, email, passwordInutilizable, googleId]
+            )).rows[0];
+        }
+
+        res.json(respuestaSesion(usuario));
+    } catch (error) {
+        console.error("Error al iniciar sesiÃ³n con Google", error);
+        if (error.code === "23505") return res.status(409).send("La cuenta de Google ya estÃ¡ vinculada a otro usuario");
+        res.status(401).send("No pudimos validar el acceso con Google");
     }
 });
 
