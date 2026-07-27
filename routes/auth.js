@@ -125,6 +125,52 @@ router.get("/perfil", auth, async (req, res) => {
     }
 });
 
+router.put("/perfil/email", auth, async (req, res) => {
+    const email = normalizeEmail(req.body?.email);
+
+    if (!isValidEmail(email)) {
+        return res.status(400).json({ mensaje: "Ingresá un email válido." });
+    }
+
+    try {
+        const existente = await pool.query(
+            "SELECT id FROM usuarios WHERE LOWER(email) = $1 AND id <> $2 LIMIT 1",
+            [email, req.usuario.id]
+        );
+        if (existente.rowCount > 0) {
+            return res.status(409).json({ mensaje: "El email ya está registrado por otro usuario." });
+        }
+
+        const tokenVerificacion = crearTokenVerificacion();
+        const expiraVerificacion = fechaExpiracionVerificacion();
+        const resultado = await pool.query(
+            `UPDATE usuarios
+             SET email = $1, emailverificado = FALSE,
+                 emailverificaciontoken = $2, emailverificacionexpira = $3
+             WHERE id = $4
+             RETURNING email`,
+            [email, tokenVerificacion, expiraVerificacion, req.usuario.id]
+        );
+
+        if (!resultado.rowCount) {
+            return res.status(404).json({ mensaje: "Usuario no encontrado." });
+        }
+
+        await enviarEmailVerificacion(email, tokenVerificacion);
+        return res.json({
+            mensaje: "Email registrado. Revisá tu correo para verificarlo.",
+            email: resultado.rows[0].email,
+            emailVerificado: false
+        });
+    } catch (error) {
+        console.error("Error al registrar el email de la cuenta:", error);
+        if (error.code === "23505") {
+            return res.status(409).json({ mensaje: "El email ya está registrado por otro usuario." });
+        }
+        return res.status(500).json({ mensaje: "No se pudo registrar el email. Intentá nuevamente." });
+    }
+});
+
 /*async function enviarEmailRecuperacion(email, token) {
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.EMAIL_FROM;
@@ -494,6 +540,12 @@ router.post("/reenviar-verificacion", async (req, res) => {
 router.post("/olvide-password", async (req, res) => {
 
     const email = normalizeEmail(req.body.email);
+    console.log("[olvide-password] email recibido:", email);
+    console.log("[olvide-password] variables de entorno:", {
+        SENDGRID_API_KEY: Boolean(process.env.SENDGRID_API_KEY),
+        EMAIL_FROM: Boolean(process.env.EMAIL_FROM),
+        APP_URL: Boolean(process.env.APP_URL)
+    });
 
     if (!email || !isValidEmail(email)) {
         return res.status(400).send("Ingresá un email válido");
@@ -501,22 +553,29 @@ router.post("/olvide-password", async (req, res) => {
 
     try {
 
+        console.log("[olvide-password] iniciando consulta a PostgreSQL");
         const usuario = await pool.query(
             "SELECT id, usuario FROM usuarios WHERE LOWER(email) = $1",
             [email]
         );
+        console.log("[olvide-password] consulta a PostgreSQL completada:", {
+            rowCount: usuario.rowCount
+        });
 
         // Por seguridad siempre respondemos lo mismo
         if (usuario.rowCount === 0) {
             return res.send("Si el correo existe, recibirás un enlace para recuperar tu contraseña.");
         }
 
+        console.log("[olvide-password] iniciando generacion del token");
         const token = crypto.randomBytes(32).toString("hex");
+        console.log("[olvide-password] token generado:", { longitud: token.length });
 
         const expiracion = new Date(
             Date.now() + 30 * 60 * 1000
         ); // 30 minutos
 
+        console.log("[olvide-password] iniciando insercion en password_resets");
         await pool.query(
             `
             INSERT INTO password_resets
@@ -529,8 +588,17 @@ router.post("/olvide-password", async (req, res) => {
                 expiracion
             ]
         );
+        console.log("[olvide-password] insercion en password_resets completada");
+        console.log("[olvide-password] construyendo enlace de recuperacion");
         const enlace = `${process.env.APP_URL}/reset-password.html?token=${token}`;
+        console.log("[olvide-password] enlace construido:", enlace);
             try {
+                console.log("[olvide-password] llamando a mailer.send():", {
+                    to: email,
+                    from: "estudiojr995@gmail.com",
+                    subject: "Recuperar contraseña",
+                    html: "HTML de recuperacion con el enlace construido arriba"
+                });
                 await mailer.send({
                     to: email,
                     from: "estudiojr995@gmail.com",
@@ -551,9 +619,13 @@ router.post("/olvide-password", async (req, res) => {
                         <p>Este enlace vence en 30 minutos.</p>
                     `
                 });
+                console.log("[olvide-password] mailer.send() completado");
             } 
             catch (error) {
                 console.error("SENDGRID:", error.response?.body || error);
+                console.error(error);
+                console.error(error.stack);
+                console.error(error.response?.body);
                 return res.status(500).send("No se pudo enviar el correo.");
             }
         res.send("Si el correo existe, recibirás un enlace para recuperar tu contraseña.");
@@ -561,6 +633,8 @@ router.post("/olvide-password", async (req, res) => {
             } catch (error) {
 
                 console.error(error);
+                console.error(error.stack);
+                console.error(error.response?.body);
 
                 res.status(500).send("Error al enviar el correo.");
 

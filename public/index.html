@@ -503,6 +503,14 @@
             <input id="cuentaEmail" type="email" readonly>
             <label for="cuentaEmailVerificado">Estado del correo</label>
             <input id="cuentaEmailVerificado" type="text" readonly>
+            <div id="registroEmailCuenta" hidden>
+                <h3>Registrar correo electr&oacute;nico</h3>
+                <p class="modal-copy">Te enviaremos un enlace para verificar el correo antes de usarlo.</p>
+                <label for="nuevoEmailCuenta">Correo electr&oacute;nico</label>
+                <input id="nuevoEmailCuenta" type="email" autocomplete="email" placeholder="tu@email.com">
+                <p id="errorRegistroEmailCuenta" class="modal-error" aria-live="polite"></p>
+                <button id="botonGuardarEmailCuenta" class="button button-secondary" type="button" onclick="guardarEmailCuenta()">Guardar correo</button>
+            </div>
             <hr>
             <h3>Pr&oacute;ximamente</h3>
             <p class="modal-copy">Estas opciones estar&aacute;n disponibles en una pr&oacute;xima actualizaci&oacute;n.</p>

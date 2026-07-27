@@ -2908,24 +2908,23 @@ function cerrarModalLogout() {
 
 }
 
-async function abrirMiCuenta() {
-    document.getElementById("menuUsuario").classList.remove("mostrar");
-    document.getElementById("passwordEliminarCuenta").value = "";
-    document.getElementById("confirmacionEliminarCuenta").value = "";
-    document.getElementById("errorEliminarCuenta").textContent = "";
-    document.getElementById("modalMiCuenta").classList.add("mostrar");
+function actualizarDatosMiCuenta(datos) {
+    const email = String(datos.email || "").trim();
+    const tieneEmail = Boolean(email);
 
+    document.getElementById("cuentaUsuario").value = datos.usuario || "Sin usuario";
+    document.getElementById("cuentaEmail").value = tieneEmail ? email : "Sin email registrado";
+    document.getElementById("cuentaEmailVerificado").value = !tieneEmail
+        ? "Sin correo registrado"
+        : (datos.emailVerificado ? "Verificado" : "Pendiente de verificación");
+    document.getElementById("registroEmailCuenta").hidden = tieneEmail;
+}
+
+async function cargarDatosMiCuenta() {
     const estado = document.getElementById("estadoMiCuenta");
-    const usuarioCuenta = document.getElementById("cuentaUsuario");
-    const emailCuenta = document.getElementById("cuentaEmail");
-    const emailVerificado = document.getElementById("cuentaEmailVerificado");
     const tokenActual = token();
 
     estado.textContent = "Cargando datos de tu cuenta...";
-    usuarioCuenta.value = "";
-    emailCuenta.value = "";
-    emailVerificado.value = "";
-
     if (!tokenActual) {
         estado.textContent = "No estas autenticado. Cerra sesion e inicia nuevamente para ver tu cuenta.";
         return;
@@ -2944,12 +2943,60 @@ async function abrirMiCuenta() {
             throw new Error(datos.mensaje || "No se pudieron cargar los datos de tu cuenta.");
         }
 
-        usuarioCuenta.value = datos.usuario || "Sin usuario";
-        emailCuenta.value = datos.email || "Sin email registrado";
-        emailVerificado.value = datos.emailVerificado ? "Verificado" : "Sin verificar";
+        actualizarDatosMiCuenta(datos);
         estado.textContent = "Datos de cuenta actualizados.";
     } catch (error) {
         estado.textContent = error.message || "No se pudieron cargar los datos de tu cuenta.";
+    }
+}
+
+async function abrirMiCuenta() {
+    document.getElementById("menuUsuario").classList.remove("mostrar");
+    document.getElementById("passwordEliminarCuenta").value = "";
+    document.getElementById("confirmacionEliminarCuenta").value = "";
+    document.getElementById("errorEliminarCuenta").textContent = "";
+    document.getElementById("nuevoEmailCuenta").value = "";
+    document.getElementById("errorRegistroEmailCuenta").textContent = "";
+    document.getElementById("modalMiCuenta").classList.add("mostrar");
+
+    await cargarDatosMiCuenta();
+}
+
+async function guardarEmailCuenta() {
+    const email = document.getElementById("nuevoEmailCuenta").value.trim();
+    const error = document.getElementById("errorRegistroEmailCuenta");
+    const boton = document.getElementById("botonGuardarEmailCuenta");
+
+    error.textContent = "";
+    if (!email) {
+        error.textContent = "Ingresá un email para registrarlo.";
+        return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = "Guardando...";
+    try {
+        const respuesta = await fetch(API + "/perfil/email", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                authorization: token()
+            },
+            body: JSON.stringify({ email })
+        });
+        const datos = await respuesta.json().catch(() => ({}));
+
+        if (!respuesta.ok) {
+            throw new Error(datos.mensaje || "No se pudo registrar el email.");
+        }
+
+        mostrarNotificacion(datos.mensaje || "Email registrado.");
+        await cargarDatosMiCuenta();
+    } catch (problema) {
+        error.textContent = problema.message || "No se pudo registrar el email.";
+    } finally {
+        boton.disabled = false;
+        boton.textContent = "Guardar correo";
     }
 }
 
@@ -3160,6 +3207,7 @@ window.cerrarModalLogout = cerrarModalLogout;
 window.confirmarLogout = confirmarLogout;
 window.abrirMiCuenta = abrirMiCuenta;
 window.cerrarMiCuenta = cerrarMiCuenta;
+window.guardarEmailCuenta = guardarEmailCuenta;
 window.eliminarMiCuenta = eliminarMiCuenta;
 window.abrirMiPerfil = abrirMiPerfil;
 window.cerrarMiPerfil = cerrarMiPerfil;
